@@ -1,6 +1,6 @@
-import adapter from '@sveltejs/adapter-node';
+// import adapter from '@sveltejs/adapter-node';
 import preprocess from 'svelte-preprocess';
-// import vercel from '@sveltejs/adapter-vercel';
+import vercel from '@sveltejs/adapter-vercel';
 const handleError = ({ status, path, referrer, referenceType }) => {
 	// if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
 	console.warn(
@@ -15,7 +15,8 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
-		adapter: adapter({ out: 'build' }),
+		// adapter: adapter({ out: 'build' }),
+		adapter: vercel(),
 		prerender: {
 			enabled: false,
 			onError: handleError,
