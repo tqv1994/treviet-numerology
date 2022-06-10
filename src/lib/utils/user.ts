@@ -50,9 +50,7 @@ export function getAvatar(user?: User): string | null {
 export function getReferralLink(user?: User): string | undefined {
 	if (user) {
 		if (Array.isArray(user.create_links) && user.create_links.length > 0) {
-			return `${frontendUrl}/auth/register?token=${user.id}-${
-				user.create_links[user.create_links.length - 1].token
-			}`;
+			return `${frontendUrl}/dang-ky/${user.create_links[user.create_links.length-1].token}`;
 		}
 	}
 	return undefined;
