@@ -11,8 +11,27 @@
 	import 'flatpickr/dist/themes/light.css';
 	import { ppost } from '$lib/utils/fetch';
 	import { getErrorMessage } from '$lib/utils/response';
-	import { authStore } from '$lib/stores/auth';
-	onMount(function () {});
+	import { redirectAgent } from '$lib/components/redirect.svelte';
+	import * as yup from 'yup';
+	import { getMsgRequired } from '$lib/utils/message';
+	let errors: any = {};
+	const schemaValidator = yup.object().shape({
+		name: yup.string().typeError(getMsgRequired('Họ tên')).required(getMsgRequired('Họ tên')),
+		dob: yup.string().typeError(getMsgRequired('Ngày sinh')).required(getMsgRequired('Ngày sinh')),
+		phone: yup
+			.string()
+			.typeError(getMsgRequired('Số điện thoại'))
+			.required(getMsgRequired('Số điện thoại')),
+		email: yup.string().typeError(getMsgRequired('Email')).required(getMsgRequired('Email')),
+		nickname: yup
+			.string()
+			.typeError(getMsgRequired('Tên thường gọi'))
+			.required(getMsgRequired('Tên thường gọi')),
+		one_time_password: yup
+			.string()
+			.typeError(getMsgRequired('Mã 2FA'))
+			.required(getMsgRequired('Mã 2FA'))
+	});
 
 	let formData: ReportFormData;
 	reset();
@@ -42,8 +61,10 @@
 	export let name = 'Tạo báo cáo';
 
 	async function onSubmit() {
+		errors = {};
 		window.openLoading();
 		try {
+			await schemaValidator.validate({ ...formData }, { abortEarly: false });
 			const res = await ppost('reports', formData);
 			if (res.ok) {
 				window.notice({
@@ -51,6 +72,7 @@
 					type: 'success'
 				});
 				reset();
+				redirectAgent('/reports');
 			} else {
 				const error = await res.json();
 				window.notice({
@@ -59,10 +81,16 @@
 				});
 			}
 		} catch (err) {
-			window.notice({
-				text: err,
-				type: 'danger'
-			});
+			if (err.inner) {
+				errors = err.inner.reduce((acc, err) => {
+					return { ...acc, [err.path]: err.message };
+				}, {});
+			} else {
+				window.notice({
+					text: 'Có lỗi xảy ra! Vui lòng thử lại sau',
+					type: 'danger'
+				});
+			}
 		}
 		window.closeLoading();
 	}
@@ -97,33 +125,41 @@
 							<div class="">
 								<div class="row">
 									<div class="col-lg-4 ">
-										<strong> Họ và tên </strong>
+										<strong> Họ và tên* </strong>
 									</div>
 									<div class="col-lg-8">
 										<div class="">
-											<BaseInput placeholder="Trần Văn A" bind:value={formData.name} />
+											<BaseInput
+												placeholder="Trần Văn A"
+												bind:value={formData.name}
+												error={errors.name}
+											/>
 										</div>
 									</div>
 								</div>
 
 								<div class="row">
 									<div class="col-lg-4 ">
-										<strong> Tên thường gọi </strong>
+										<strong> Tên thường gọi* </strong>
 									</div>
 									<div class="col-lg-8">
 										<div class="">
-											<BaseInput placeholder="" bind:value={formData.nickname} />
+											<BaseInput
+												placeholder=""
+												bind:value={formData.nickname}
+												error={errors.nickname}
+											/>
 										</div>
 									</div>
 								</div>
 
 								<div class="row">
 									<div class="col-lg-4 ">
-										<strong> Ngày sinh </strong>
+										<strong> Ngày sinh* </strong>
 									</div>
 									<div class="col-lg-8">
 										<div class="">
-											<BaseInput appendIcon="fas fa-calendar">
+											<BaseInput appendIcon="fas fa-calendar" error={errors.dob}>
 												<Flatpickr
 													options={flatpickrOptions}
 													class="form-control datepicker bg-white"
@@ -139,33 +175,45 @@
 
 								<div class="row">
 									<div class="col-lg-4 ">
-										<strong> Điện thoại </strong>
+										<strong> Điện thoại* </strong>
 									</div>
 									<div class="col-lg-8">
 										<div class="">
-											<BaseInput placeholder="(+84) 123 456 789" bind:value={formData.phone} />
+											<BaseInput
+												placeholder="(+84) 123 456 789"
+												bind:value={formData.phone}
+												error={errors.phone}
+											/>
 										</div>
 									</div>
 								</div>
 
 								<div class="row">
 									<div class="col-lg-4 ">
-										<strong> Email </strong>
+										<strong> Email* </strong>
 									</div>
 									<div class="col-lg-8">
 										<div class="">
-											<BaseInput placeholder="tranvana@example.com" bind:value={formData.email} />
+											<BaseInput
+												placeholder="tranvana@example.com"
+												bind:value={formData.email}
+												error={errors.email}
+											/>
 										</div>
 									</div>
 								</div>
 
 								<div class="row">
 									<div class="col-lg-4 ">
-										<strong> Mã 2FA </strong>
+										<strong> Mã 2FA* </strong>
 									</div>
 									<div class="col-lg-8">
 										<div class="">
-											<BaseInput placeholder="208304" bind:value={formData.one_time_password} />
+											<BaseInput
+												placeholder="208304"
+												bind:value={formData.one_time_password}
+												error={errors.one_time_password}
+											/>
 										</div>
 									</div>
 								</div>

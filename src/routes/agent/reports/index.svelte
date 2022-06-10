@@ -36,17 +36,12 @@
 	import { appName } from '$lib/env';
 	import { redirect } from '$lib/components/redirect.svelte';
 	import { objectToQueryString } from '$lib/utils/string';
+	import Cell from '$lib/components/ABS/Global/Datatable/Cell.svelte';
+	import { formatDate } from '$lib/utils/datetime';
 	export let reportDatas: DataWithPagination<Report>;
 	export let keyword: string;
 	export let currentPage: number;
 	onMount(async () => {
-		let topmenu = document.getElementsByTagName('nav').item(0);
-		// topmenu.classList.add('bg-danger');
-		topmenu.classList.add('navbar-dark');
-		topmenu.classList.remove('navbar-light');
-		let search = document.getElementsByTagName('form').item(0);
-		search.classList.remove('navbar-search-dark');
-		search.classList.add('navbar-search-light');
 	});
 	let tableColumns: TableColumn[] = [
 		{
@@ -140,6 +135,8 @@
 		<div slot="cell" let:row let:cell>
 			{#if cell.key === 'agent_id'}
 				{row.agent ? row.agent.agentname : ''}
+			{:else if cell.key === 'created_at'}
+				{cell.value ? formatDate(cell.value, 'dd/mm/yyyy') : ''}
 			{:else}
 				{cell.value}
 			{/if}

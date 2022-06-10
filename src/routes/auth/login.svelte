@@ -109,7 +109,7 @@
 	<div slot="footer">
 		<div class="row mt-3">
 			<div class="col-6">
-				<a href="/lost-password" class="text-light">
+				<a href="/forgot-password" class="text-light">
 					<small>Quên mật khẩu</small>
 				</a>
 			</div>
