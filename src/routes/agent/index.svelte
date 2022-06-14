@@ -1,6 +1,22 @@
 <script lang="ts" context="module">
-</script>
+	export const load: Load = async ({ fetch, session, url }) => {
+		let packageDatas: DataTableAgenctLevel[] | undefined;
+		const res = await fetch(`/p/packages/filter?perPage=999`);
+		if (res.ok) {
+			const data = await res.json();
+			packageDatas = data.results.data;
+		} else {
+			const err = await res.json();
+			console.error(err);
+		}
 
+		return {
+			props: {
+				packageDatas
+			}
+		};
+	};
+</script>
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 
@@ -23,6 +39,9 @@
 	import AgentLevelTable from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import { appName } from '$lib/env';
+	import type { Load } from '@sveltejs/kit';
+	import { packagesStore } from '$lib/stores/package';
+
 	onMount(function () {
 		// window.fusionCharts = FusionCharts;
 		// window.charts = Charts;
@@ -288,44 +307,6 @@
 			progressType: 'gradient-info'
 		}
 	];
-
-	let agentLevelData: DataTableAgenctLevel[] = [
-		{
-			name: 'Gói 1',
-			report_number: 1,
-			expense: 2000000,
-			duration: '1 năm',
-			color: 'success'
-		},
-		{
-			name: 'Gói 5',
-			report_number: 5,
-			expense: 5000000,
-			duration: '1 năm',
-			color: 'warning'
-		},
-		{
-			name: 'Gói 25',
-			report_number: 25,
-			expense: 12000000,
-			duration: '1 năm',
-			color: 'danger'
-		},
-		{
-			name: 'Gói 125',
-			report_number: 125,
-			expense: 32000000,
-			duration: '1 năm',
-			color: 'primary'
-		},
-		{
-			name: 'Gói 625',
-			report_number: 625,
-			expense: 79000000,
-			duration: '2 năm',
-			color: 'default'
-		}
-	];
 </script>
 
 <svelte:head>
@@ -433,7 +414,7 @@
 				<AgentList tableData={agentList} />
 			</div>
 			<div class="col-xl-4">
-				<AgentLevelTable tableData={agentLevelData} />
+				<AgentLevelTable tableData={$packagesStore} />
 			</div>
 		</div>
 	</div>

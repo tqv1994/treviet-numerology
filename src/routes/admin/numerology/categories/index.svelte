@@ -2,8 +2,17 @@
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
+		const perPage = url.searchParams.get('page') || 10;
+		const sort = url.searchParams.get('sort') || '-id';
 		let categoryDatas: DataWithPagination<Category> | undefined;
-		const res = await fetch(`/p/categories?${objectToQueryString({ keyword, page: currentPage })}`);
+		const res = await fetch(
+			`/p/categories/filter?${objectToQueryString({
+				filter: { cat_name: keyword },
+				page: currentPage,
+				perPage,
+				sort
+			})}`
+		);
 		if (res.ok) {
 			const data = await res.json();
 			categoryDatas = data.results;
@@ -16,7 +25,9 @@
 			props: {
 				keyword,
 				currentPage,
-				categoryDatas
+				categoryDatas,
+				perPage,
+				sort
 			}
 		};
 	};
@@ -42,6 +53,8 @@
 	export let categoryDatas: DataWithPagination<Category>;
 	export let keyword: string;
 	export let currentPage: number;
+	export let perPage: number;
+	export let sort: string;
 	onMount(async () => {
 		// let topmenu = document.getElementsByTagName('nav').item(0);
 		// topmenu.classList.add('bg-danger');
@@ -93,8 +106,12 @@
 	async function getData() {
 		window.openLoading();
 		categoryDatas = await getListCategoriesService({
-			keyword,
-			page: currentPage
+			filter: {
+				cat_name: keyword
+			},
+			page: currentPage,
+			perPage,
+			sort
 		});
 		window.closeLoading();
 	}
@@ -104,7 +121,6 @@
 	}
 
 	function onEdit(category: Category) {
-		console.log(category);
 		redirectAdmin(`/numerology/categories/update/${category.id}`);
 	}
 
@@ -138,6 +154,16 @@
 		}
 		window.closeLoading();
 	}
+
+	async function onChangePerPage(event: CustomEvent<number>){
+		perPage = event.detail;
+		await getData();
+	}
+
+	async function onSort(event: CustomEvent<string>){
+		sort = event.detail;
+		await getData();
+	}
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -162,9 +188,13 @@
 		dataWithPagination={categoryDatas}
 		{tableColumns}
 		{keyword}
+		{perPage}
+		{sort}
 		on:create={onCreate}
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
+		on:changePerPage={onChangePerPage}
+		on:sorting={onSort}
 	>
 		<div slot="cell" let:row let:cell>
 			{#if cell.key === 'actions'}

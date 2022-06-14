@@ -3,13 +3,16 @@
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
 		let reportDatas: DataWithPagination<Report> | undefined = undefined;
-		const res = await fetch(`/p/reports?${objectToQueryString({ keyword, page: currentPage })}`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/vnd.api+json',
-				Accept: 'application/vnd.api+json'
+		const res = await fetch(
+			`/p/reports/filter?${objectToQueryString({ filter: { name: keyword }, page: currentPage })}`,
+			{
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/vnd.api+json',
+					Accept: 'application/vnd.api+json'
+				}
 			}
-		});
+		);
 		if (res.ok) {
 			const data = await res.json();
 			console.log(data);
@@ -43,14 +46,14 @@
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
 	import Flatpickr from 'svelte-flatpickr';
-    import { objectToQueryString } from '$lib/utils/string';
+	import { objectToQueryString } from '$lib/utils/string';
 	import type { Load } from '@sveltejs/kit';
 	import { ppost } from '$lib/utils/fetch';
 	let reportDatas: DataWithPagination<Report> | undefined;
 	export let keyword: string;
 	export let currentPage: number;
-    let formData: ReportFormData;
-	
+	let formData: ReportFormData;
+
 	reset();
 	function reset() {
 		formData = {

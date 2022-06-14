@@ -6,12 +6,18 @@
 	import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import Flatpickr from 'svelte-flatpickr';
 	import { formatDate } from '$lib/helper/datetime';
-	import { getListFilterDatePurchaseService, getListPurchasesService } from '$lib/services/purchase.service';
+	import {
+		getListFilterDatePurchaseService,
+		getListPurchasesService
+	} from '$lib/services/purchase.service';
 	import type { Purchase } from '$lib/stores/purchase';
 
 	export let keyword: string;
-	export let currentPage: number;
+	export let currentPage: number = 1;
 	export let props: DataWithPagination<Purchase>;
+	export let filter: Record<string, string | number | boolean> = {};
+	export let perPage: number = 10;
+	export let sort: string = '-id';
 
 	let tableColumns: TableColumn[] = [
 		{
@@ -19,51 +25,45 @@
 		},
 		{
 			prop: 'user_create',
-			label: 'Hệ thống',
-			minWidth: 160,
-			sortable: true
-		},
-		{
-			prop: 'agent_name',
 			label: 'Người chuyển',
 			minWidth: 220,
-			sortable: true
+			sortable: false
 		},
 		{
 			prop: 'purchase_date',
 			label: 'Ngày',
 			minWidth: 135,
-			sortable: true
+			sortable: false
 		},
 		{
 			prop: 'agent_name',
 			label: 'Họ và tên',
 			minWidth: 220,
-			sortable: true
+			sortable: false
 		},
 		{
 			prop: 'package',
 			label: 'Gói',
 			minWidth: 100,
-			sortable: true
+			sortable: false
 		},
 		{
 			prop: 'agent_phone',
 			label: 'Điện thoại',
 			minWidth: 100,
-			sortable: true
+			sortable: false
 		},
 		{
 			prop: 'agent_level',
 			label: 'Đại lý',
 			minWidth: 100,
-			sortable: true
+			sortable: false
 		},
 		{
 			prop: 'agent_email',
 			label: 'Email',
 			minWidth: 150,
-			sortable: true
+			sortable: false
 		}
 	];
 
@@ -75,13 +75,17 @@
 	const flatpickrOptionsRange = {
 		mode: 'range',
 		enableTime: true,
-		onChange: (selectedDates: Date, dateStr: string, instance: []) => {
+		onChange: async (selectedDates: Date, dateStr: string, instance: []) => {
 			let keyConnect = ' to ';
 			if (dateStr.includes(keyConnect)) {
 				let listDateStr = dateStr.split(' to ');
-				let fromDate = listDateStr[0];
-				let toDate = listDateStr[1];
-				getFilterDateData(fromDate, toDate);
+				if (listDateStr.length > 1) {
+					let fromDate = listDateStr[0];
+					let toDate = listDateStr[1];
+					filter.from_date = fromDate;
+					filter.to_date = toDate;
+					await getData();
+				}
 			}
 		}
 	};
@@ -92,23 +96,24 @@
 	}
 
 	async function onSearch(event: CustomEvent<string>) {
-		keyword = event.detail;
-		await getData();
+		// keyword = event.detail;
+		// await getData();
 	}
 
 	async function getData() {
 		window.openLoading();
 		props = await getListPurchasesService({
-			keyword,
-			page: currentPage
+			filter,
+			page: currentPage,
+			sort,
+			perPage
 		});
 		window.closeLoading();
 	}
 
-	async function getFilterDateData(from_date: string, to_date: string) {
-		window.openLoading();
-		props = await getListFilterDatePurchaseService(from_date, to_date);
-		window.closeLoading();
+	async function onChangePerPage(event: CustomEvent<number>){
+		perPage = event.detail;
+		await getData();
 	}
 </script>
 
@@ -118,12 +123,15 @@
 		dataWithPagination={props}
 		{tableColumns}
 		{keyword}
+		{sort}
+		{perPage}
 		navTab
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
+		on:changePerPage={onChangePerPage}
 	>
 		<div slot="label-search">
-			<p class="label-search mt-2 ml-4 mr-4">Search:</p>
+			<p class="label-search mt-2 ml-4 mr-4">Tìm kiếm:</p>
 		</div>
 		<div slot="filter-form-content" class="filter-form-content">
 			<div class="row form-group">
@@ -155,7 +163,7 @@
 			{:else if cell.key === 'user_create'}
 				{row.user_create ? row.user_create.name : ''}
 			{:else if cell.key === 'package'}
-				{row.purchase_details ? '' : ''}
+				{row.purchase_details ? row.purchase_details[0].package.package_name : ''}
 			{:else}
 				{cell.value}
 			{/if}

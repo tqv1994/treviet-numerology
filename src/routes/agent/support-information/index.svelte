@@ -2,8 +2,17 @@
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
+		const sort = url.searchParams.get('sort') || '-id';
+		const perPage = url.searchParams.get('perPage') || 10;
 		let faqDatas: DataWithPagination<Faq> | undefined;
-		const res = await fetch(`/p/faqs?${objectToQueryString({ keyword, page: currentPage })}`);
+		const res = await fetch(
+			`/p/faqs/filter?${objectToQueryString({
+				filter: { name: keyword },
+				page: currentPage,
+				sort,
+				perPage
+			})}`
+		);
 		console.log(res);
 
 		if (res.ok) {
@@ -20,7 +29,9 @@
 			props: {
 				keyword,
 				currentPage,
-				faqDatas
+				faqDatas,
+				sort,
+				perPage
 			}
 		};
 	};
@@ -37,22 +48,24 @@
 	import type { Faq } from '$lib/stores/faq';
 	import SideBarItem from '$lib/components/SidebarPlugin/SideBarItem.svelte';
 
-	export let faqDatas: DataWithPagination<Faq>;
+	export let faqDatas: Faq[];
 	export let keyword: string;
 	export let currentPage: number;
 	export let name = 'Quản trị';
+	export let perPage: number;
+	export let sort: string;
 
 	let questions = faqDatas;
 	let listQuestion = addActiveListFaq(questions);
 
-	function addActiveListFaq(questions) {
+	function addActiveListFaq(questions: Faq[]) {
 		return questions.map((item, index) => {
-      let active = false;
-      if (index == 0) {
-        active = true;
-      }
-      return { ...item, active: active};
-    });
+			let active = false;
+			if (index == 0) {
+				active = true;
+			}
+			return { ...item, active: active };
+		});
 	}
 
 	let digitals = [
@@ -221,13 +234,13 @@
 		width: 100%;
 		display: flex;
 		justify-content: space-between;
-    align-items: center;
-    font-size: 20px;
+		align-items: center;
+		font-size: 20px;
 	}
 	.text-question-content {
 		font-weight: 400;
 		line-height: 28px;
-    font-size: 16px;
+		font-size: 16px;
 	}
 	.question-item {
 		width: 100%;

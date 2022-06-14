@@ -14,7 +14,7 @@ export const getListFaqsService = async (
 	queryParams?: QueryParams
 ): Promise<DataWithPagination<Faq>> => {
 	return new Promise(async (resolve, reject) => {
-		const res = await pget(`${endpoint}?${objectToQueryString(queryParams)}`);
+		const res = await pget(`${endpoint}/filter?${objectToQueryString(queryParams)}`);
 		if (res.ok) {
 			const data: { results: DataWithPagination<Faq> } = await res.json();
 			resolve(data.results);

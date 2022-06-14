@@ -2,8 +2,11 @@
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
+		const perPage = url.searchParams.get('perPage') || 10;
 		let reportDatas: DataWithPagination<Report>;
-		const res = await fetch(`/p/reports/user/${session.user.id}?${objectToQueryString({ keyword, page: currentPage })}`);
+		const res = await fetch(
+			`/p/reports/filter?${objectToQueryString({ sort: `-id`, page: currentPage, perPage })}`
+		);
 		if (res.ok) {
 			const data = await res.json();
 			console.log(data);
@@ -17,7 +20,8 @@
 			props: {
 				keyword,
 				currentPage,
-				reportDatas
+				reportDatas,
+				perPage
 			}
 		};
 	};
@@ -41,8 +45,9 @@
 	export let reportDatas: DataWithPagination<Report>;
 	export let keyword: string;
 	export let currentPage: number;
-	onMount(async () => {
-	});
+	export let sort: string = '-id';
+	export let perPage: number;
+	onMount(async () => {});
 	let tableColumns: TableColumn[] = [
 		{
 			type: 'selection'
@@ -96,10 +101,24 @@
 	async function getData() {
 		window.openLoading();
 		reportDatas = await getListReportsService({
-			keyword,
-			page: currentPage
+			filter: {
+				name: keyword
+			},
+			sort,
+			page: currentPage,
+			perPage
 		});
 		window.closeLoading();
+	}
+
+	async function onSort(event: CustomEvent<string>) {
+		sort = event.detail;
+		await getData();
+	}
+
+	async function onChangePerPage(event: CustomEvent<number>) {
+		perPage = event.detail;
+		await getData();
 	}
 </script>
 
@@ -128,9 +147,12 @@
 		dataWithPagination={reportDatas}
 		{tableColumns}
 		{keyword}
+		{sort}
+		on:sorting={onSort}
 		on:create={onCreate}
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
+		on:changePerPage={onChangePerPage}
 	>
 		<div slot="cell" let:row let:cell>
 			{#if cell.key === 'agent_id'}

@@ -43,6 +43,8 @@ export type QueryParams = {
   page?: number;
   perPage?: number;
   sort?: string;
+  create_user_id?: number;
+  filter?: any;
   type?: "DESC" | "ASC";
 };
 

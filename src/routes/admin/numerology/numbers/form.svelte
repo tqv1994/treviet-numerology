@@ -1,18 +1,21 @@
 <script lang="ts">
-	import { categoriesStore, type CategoryFormData, type CategoryNumberFormData } from '$lib/stores/numerology';
+	import {
+		categoriesStore,
+		type CategoryFormData,
+		type CategoryNumberFormData
+	} from '$lib/stores/numerology';
 	import { STATUS } from '$lib/stores/type';
 
 	import BaseHeader from '$lib/components/BaseHeader.svelte';
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseCheckbox from '$lib/components/Inputs/BaseCheckbox.svelte';
 	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
-	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { createEventDispatcher } from 'svelte';
 	import * as yup from 'yup';
 	import { getMsgRequired } from '$lib/utils/message';
-import Image from '$lib/components/ABS/Image.svelte';
-import { backendUrl } from '$lib/env';
+	import Image from '$lib/components/ABS/Image.svelte';
+	import { backendUrl } from '$lib/env';
 	const dispatch = createEventDispatcher();
 	export let formData: CategoryNumberFormData;
 	export let title: string;
@@ -22,8 +25,11 @@ import { backendUrl } from '$lib/env';
 		name: yup.string().typeError(getMsgRequired('Tên')).required(getMsgRequired('Tên')),
 		description: yup.string().typeError(getMsgRequired('Mô tả')).required(getMsgRequired('Mô tả')),
 		number: yup.number().typeError(getMsgRequired('Số')).required(getMsgRequired('Số')),
-		category_id: yup.number().typeError(getMsgRequired("Danh mục")).required(getMsgRequired('Danh mục')),
-		x_order: yup.number().typeError(getMsgRequired("Sắp xếp")).required(getMsgRequired('Sắp xếp'))
+		category_id: yup
+			.number()
+			.typeError(getMsgRequired('Danh mục'))
+			.required(getMsgRequired('Danh mục')),
+		x_order: yup.number().typeError(getMsgRequired('Sắp xếp')).required(getMsgRequired('Sắp xếp'))
 	});
 
 	async function onSubmit() {
@@ -63,8 +69,7 @@ import { backendUrl } from '$lib/env';
 				</nav>
 			</div>
 			<div class="col-lg-6 col-5 text-right">
-				<a href="/admin/numerology/numbers" class="btn btn-success">Danh sách các con số</a
-				>
+				<a href="/admin/numerology/numbers" class="btn btn-success">Danh sách các con số</a>
 			</div>
 		</div>
 	</BaseHeader>
@@ -109,7 +114,7 @@ import { backendUrl } from '$lib/env';
 										<strong> Tên </strong>
 									</div>
 									<div class="col-lg-8">
-										<div class="" >
+										<div class="">
 											<BaseInput error={errors.name} bind:value={formData.name} />
 										</div>
 									</div>
@@ -148,8 +153,8 @@ import { backendUrl } from '$lib/env';
 											{#if formData.photo_link}
 												<Image src={`${backendUrl}${formData.photo_link}`} />
 											{/if}
-											<BaseInput  >
-												<input type="file" bind:files={imageInput}/>
+											<BaseInput>
+												<input type="file" bind:files={imageInput} />
 											</BaseInput>
 										</div>
 									</div>

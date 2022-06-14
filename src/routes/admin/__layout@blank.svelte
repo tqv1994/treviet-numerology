@@ -1,6 +1,16 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, url }) => {
 		const myAgent = getMyAgent(session.user);
+		let packageDatas: DataTableAgenctLevel[] | undefined;
+		const res = await fetch(`/p/packages/filter?page=1&perPage=999&sort=id`);
+		if (res.ok) {
+			const data = await res.json();
+			packageDatas = data.results.data;
+            packagesStore.set(data.results.data);
+		} else {
+			const err = await res.json();
+			console.error(err);
+		}
 		if (!session.user || myAgent) {
 			redirect('/');
 		}
@@ -25,6 +35,8 @@
 	import { redirect } from '$lib/components/redirect.svelte';
 	import Loading from '$lib/components/ABS/Loading.svelte';
 	import { getMyAgent } from '$lib/utils/user';
+	import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
+	import { packagesStore } from '$lib/stores/package';
 
 	export let type = 'default';
 
@@ -83,7 +95,7 @@
 				<SideBarItem
 					link={{
 						name: 'Nội dung con số',
-						icon: 'ni ni-ui-04',
+						icon: 'ni ni-single-copy-04',
 						isActive: checkMenuActive('/admin/numerology', pathname, true)
 					}}
 				>
@@ -115,7 +127,7 @@
 				<SideBarItem
 					link={{
 						name: 'Cáo cáo',
-						icon: 'ni ni-ui-04',
+						icon: 'ni ni-collection',
 						path: '/admin/reports',
 						isActive: checkMenuActive('/admin/reports', pathname, true)
 					}}
@@ -132,7 +144,7 @@
 				<SideBarItem
 					link={{
 						name: 'Danh sách gói',
-						icon: 'ni ni-single-copy-04',
+						icon: 'ni ni-ui-04',
 						path: '/admin/packages',
 						isActive: checkMenuActive('/admin/packages', pathname, true)
 					}}
@@ -141,8 +153,16 @@
 					link={{
 						name: 'Lịch sử xuất MAP',
 						icon: 'ni ni-folder-17',
-						path: '/admin/transaction/map-publishing',
-						isActive: checkMenuActive('/admin/transaction/map-publishing', pathname, true)
+						path: '/admin/map-publishing',
+						isActive: checkMenuActive('/admin/map-publishing', pathname, true)
+					}}
+				/>
+				<SideBarItem
+					link={{
+						name: 'Tài khoản',
+						icon: 'ni ni-circle-08',
+						path: '/admin/profile',
+						isActive: checkMenuActive('/admin/profile', pathname)
 					}}
 				/>
 				<SideBarItem

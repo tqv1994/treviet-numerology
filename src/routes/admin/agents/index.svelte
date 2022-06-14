@@ -2,8 +2,17 @@
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
+		const sort = url.searchParams.get('sort') || '-id';
+		const perPage = url.searchParams.get('perPage') || 10;
 		let agentDatas: DataWithPagination<Agent> | undefined;
-		const res = await fetch(`/p/agents?${objectToQueryString({ keyword, page: currentPage })}`);
+		const res = await fetch(
+			`/p/agents/filter?${objectToQueryString({
+				filter: { agentname: keyword },
+				page: currentPage,
+				sort,
+				perPage
+			})}`
+		);
 
 		let treeViews: AgentTreeView[];
 		const resTree = await fetch(`/p/tree-view`);
@@ -30,7 +39,9 @@
 				keyword,
 				currentPage,
 				agentDatas,
-				treeViews
+				treeViews,
+				sort,
+				perPage
 			}
 		};
 	};
@@ -41,8 +52,6 @@
 	import BaseHeader from '$lib/components/BaseHeader.svelte';
 	export let name = 'Quản trị';
 	import { onMount } from 'svelte';
-	import type { Report } from '$lib/stores/report';
-	import { getListReportsService } from '$lib/services/report.service';
 	import type { DataWithPagination } from '$lib/stores/type';
 	import Table from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
@@ -50,31 +59,25 @@
 	import { redirect } from '$lib/utils/redirect';
 	import Card from '$lib/components/Cards/Card.svelte';
 	import type { Agent, AgentTreeView } from '$lib/stores/agent';
-	import { getListAgentsService, getListFilterDateAgentService } from '$lib/services/agent.service';
+	import {
+		getListAgentsService,
+		getListFilterDateAgentService,
+		updateAgentStatus
+	} from '$lib/services/agent.service';
 	import type { Load } from '@sveltejs/kit';
 	import { objectToQueryString } from '$lib/utils/string';
 	import Folder from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
 	import Flatpickr from 'svelte-flatpickr';
 
-	let filterTime = true;
-
 	export let agentDatas: DataWithPagination<Agent>;
 	export let treeViews: AgentTreeView[];
 	export let keyword: string;
 	export let currentPage: number;
+	export let sort: string;
+	export let perPage: number;
+	export let filter: Record<string, string | number | boolean> = {};
 
-	console.log(treeViews);
-	
-	onMount(async () => {
-		// await getData();
-		// let topmenu = document.getElementsByTagName('nav').item(0);
-		// topmenu.classList.add('bg-danger');
-		// topmenu.classList.add('navbar-dark');
-		// topmenu.classList.remove('navbar-light');
-		// let search = document.getElementsByTagName('form').item(0);
-		// search.classList.remove('navbar-search-dark');
-		// search.classList.add('navbar-search-light');
-	});
+	let filterTime = true;
 
 	let tableColumns: TableColumn[] = [
 		{
@@ -121,26 +124,36 @@
 			label: 'Trạng thái',
 			minWidth: 150,
 			sortable: true
+		},
+		{
+			prop: 'action',
+			label: 'Hành động',
+			minWidth: 150
+			// sortable: true
 		}
 	];
 
 	let dates = {
 		simple: new Date(),
-		range: "2022-05-22 12:00 to 2022-06-21 12:00"
+		range: '2022-05-22 12:00 to 2022-06-21 12:00'
 	};
 
 	const flatpickrOptionsRange = {
-		mode: "range",
+		mode: 'range',
 		enableTime: true,
-		onChange: (selectedDates: Date, dateStr: string, instance: []) => {
-			let keyConnect = " to ";
+		onChange: async (selectedDates: Date, dateStr: string, instance: []) => {
+			let keyConnect = ' to ';
 			console.log(dateStr);
-			
+
 			if (dateStr.includes(keyConnect)) {
-				let listDateStr = dateStr.split(" to ");
-				let fromDate = listDateStr[0];
-				let toDate = listDateStr[1];
-				getFilterDateData(fromDate, toDate)
+				let listDateStr = dateStr.split(' to ');
+				if (listDateStr.length > 1) {
+					let fromDate = listDateStr[0];
+					let toDate = listDateStr[1];
+					filter.from_date = fromDate;
+					filter.to_date = toDate;
+					await getData();
+				}
 			}
 		}
 	};
@@ -152,24 +165,41 @@
 
 	async function onSearch(event: CustomEvent<string>) {
 		keyword = event.detail;
+		filter.agentname = keyword;
 		await getData();
 	}
 
 	async function getData() {
 		window.openLoading();
 		agentDatas = await getListAgentsService({
-			keyword,
-			page: currentPage
+			filter,
+			page: currentPage,
+			sort,
+			perPage
 		});
 		window.closeLoading();
 	}
 
-	async function getFilterDateData(from_date: string, to_date: string) {
-		window.openLoading();
-		agentDatas = await getListFilterDateAgentService(from_date, to_date);
-		console.log(agentDatas);
-		
-		window.closeLoading();
+	async function updateStatusAgent(agent_id: number) {
+		let agent = await updateAgentStatus(agent_id);
+		let listAgent = agentDatas.data;
+		listAgent = listAgent?.map((item) => {
+			if (item.id === agent_id) {
+				item.status = agent.status;
+			}
+			return item;
+		});
+		agentDatas.data = listAgent;
+	}
+
+	async function onChangePerPage(event: CustomEvent<number>) {
+		perPage = event.detail;
+		await getData();
+	}
+
+	async function onSort(event: CustomEvent<string>) {
+		sort = event.detail;
+		await getData();
 	}
 </script>
 
@@ -201,7 +231,7 @@
 				</h3>
 				<!-- Card body -->
 				<div class="mt-3" style="color:mediumvioletred">
-					<Folder expanded={true} agentTreeViews={treeViews} ref_code={null}/>
+					<Folder expanded={true} agentTreeViews={treeViews} ref_code={null} />
 				</div>
 			</Card>
 			<!-- Input groups -->
@@ -215,9 +245,13 @@
 		dataWithPagination={agentDatas}
 		{tableColumns}
 		{keyword}
+		{sort}
+		{perPage}
 		{filterTime}
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
+		on:changePerPage={onChangePerPage}
+		on:sorting={onSort}
 		styleFilter="display: -webkit-inline-box;"
 	>
 		<div slot="filterRadio" class="mr-5 filter-radio">
@@ -232,19 +266,19 @@
 				Theo thời gian
 			</label>
 		</div>
-		<div slot="filterTime" class="filterHeard" >
+		<div slot="filterTime" class="filterHeard">
 			<div class="row form-group mb--3" style="margin-bottom:0px;margin-left: -5px">
 				<p class="search-datetime">Từ</p>
 				<div class="col-md-9 width-date-picker">
 					<BaseInput>
 						<Flatpickr
-						  options={flatpickrOptionsRange}
-						  class="form-control datepicker bg-white"
-						  defaultDate={dates.range}
-						  placeholder={dates.range}
-						  dateFormat="Y-m-d"
+							options={flatpickrOptionsRange}
+							class="form-control datepicker bg-white"
+							defaultDate={dates.range}
+							placeholder={dates.range}
+							dateFormat="Y-m-d"
 						/>
-					  </BaseInput>
+					</BaseInput>
 				</div>
 				<div class="col-md-3" />
 			</div>
@@ -252,6 +286,15 @@
 		<div slot="cell" let:row let:cell>
 			{#if cell.key === 'username'}
 				{row.user ? row.user.name : ''}
+			{:else if cell.key === 'action'}
+				<span
+					class={`badge-pill badge-success badge btn-active ${
+						row.status === 'Chưa duyệt' ? 'not-active' : ''
+					}`}
+					on:click={updateStatusAgent(row.id)}
+				>
+					Active
+				</span>
 			{:else}
 				{cell.value}
 			{/if}
@@ -278,5 +321,14 @@
 
 	.search-datetime {
 		margin-top: 34px;
+	}
+
+	.btn-active {
+		cursor: pointer;
+	}
+
+	.not-active {
+		background: #cecece;
+		color: #000;
 	}
 </style>

@@ -98,7 +98,7 @@
 		errors = {};
 		try {
 			await schemaValidator.validate({ ...formData }, { abortEarly: false });
-			const res = await ppost('user-client/register', formData);
+			const res = await ppost('users/register', formData);
 			if (!res.ok) {
 				const error = await res.json();
 				throw getErrorMessage(error.errors);

@@ -15,11 +15,7 @@ export const getListPackagesService = async (
 ): Promise<DataWithPagination<Package>> => {
   return new Promise(async (resolve, reject) => {
     const res = await fetch(
-      `${apiUrl}${endpoint}?${objectToQueryString(queryParams)}`,
-      {
-        method: "GET",
-        headers: getResponseAuthorizationHeaders(),
-      }
+      `/p${endpoint}/filter?${objectToQueryString(queryParams)}`
     );
     if (res.ok) {
       const data: { results: DataWithPagination<Package> } = await res.json();

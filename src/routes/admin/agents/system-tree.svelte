@@ -26,8 +26,15 @@
 	import type { Load } from '@sveltejs/kit';
 	import type { AgentTreeView } from '$lib/stores/agent';
 	import Folder from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
+	import { packagesStore } from '$lib/stores/package';
 
 	export let treeViews: AgentTreeView[];
+	let packages = $packagesStore;
+	let listColor = convertListColor(packages);
+	
+	function convertListColor(packages) {
+		return packages.map(item => item.color).reverse();
+	}
 </script>
 
 <div transition:fade={{ duration: 250 }}>
@@ -52,7 +59,7 @@
 						>
 							<span> - Cây hệ thống </span>
 						</nav>
-						<Folder expanded={true} agentTreeViews={treeViews} ref_code={null} />
+						<Folder expanded={true} agentTreeViews={treeViews} ref_code={null} colors={listColor}/>
 						<!-- Card body -->
 					</Card>
 				</div>

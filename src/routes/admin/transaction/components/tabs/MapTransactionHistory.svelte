@@ -10,8 +10,13 @@
 	import type { Purchase } from '$lib/stores/purchase';
 
 	export let keyword: string;
-	export let currentPage: number;
-	export let props: DataWithPagination<Purchase>;
+	export let currentPage: number = 1;
+	export let props: any;
+	export let listPurchase: DataWithPagination<Purchase> = props.purchaseByIdDatas;
+	export let userId: number = props.userId;
+	export let perPage: number = 10;
+	export let sort: string = "-id";
+	export let filter: Record<string, string | number | boolean> = {};
 
 	let tableColumns: TableColumn[] = [
 		{
@@ -24,35 +29,35 @@
 			sortable: true
 		},
 		{
-			prop: 'agent_sex',
-			label: 'Giới tính',
-			minWidth: 100,
-			sortable: true
-		},
-		{
 			prop: 'agent_agentname',
-			label: 'Họ và tên',
+			label: 'Người nhận',
 			minWidth: 135,
-			sortable: true
-		},
-		{
-			prop: 'agent_phone',
-			label: 'Điện thoại',
-			minWidth: 100,
-			sortable: true
+			sortable: false
 		},
 		{
 			prop: 'package_name',
 			label: 'Tên gói',
 			minWidth: 100,
-			sortable: true
+			sortable: false
+		},
+		{
+			prop: 'agent_level',
+			label: 'Đại lý',
+			minWidth: 100,
+			sortable: false
 		},
 		{
 			prop: 'agent_email',
 			label: 'Email',
 			minWidth: 150,
-			sortable: true
-		}
+			sortable: false
+		},
+		{
+			prop: 'agent_phone',
+			label: 'Điện thoại',
+			minWidth: 100,
+			sortable: false
+		},
 	];
 
 	let dates = {
@@ -63,13 +68,17 @@
 	const flatpickrOptionsRange = {
 		mode: 'range',
 		enableTime: true,
-		onChange: (selectedDates: Date, dateStr: string, instance: []) => {
+		onChange: async(selectedDates: Date, dateStr: string, instance: []) => {
 			let keyConnect = ' to ';
 			if (dateStr.includes(keyConnect)) {
 				let listDateStr = dateStr.split(' to ');
-				let fromDate = listDateStr[0];
-				let toDate = listDateStr[1];
-				getFilterDateDataByUser(fromDate, toDate);
+				if(listDateStr.length > 1){
+					let fromDate = listDateStr[0];
+					let toDate = listDateStr[1];
+					filter.from_date = fromDate;
+					filter.to_date = toDate;
+					await getData();
+				}
 			}
 		}
 	};
@@ -80,38 +89,47 @@
 	}
 
 	async function onSearch(event: CustomEvent<string>) {
-		keyword = event.detail;
-		await getData();
+		// keyword = event.detail;
+		// await getData();
 	}
 
 	async function getData() {
+		filter.create_user_id = userId;
 		window.openLoading();
-		props = await getListPurchasesService({
-			keyword,
-			page: currentPage
+		listPurchase = await getListPurchasesService({
+			page: currentPage,
+			filter,
+			perPage,
+			sort
 		});
-		console.log('map transaction');
-
 		window.closeLoading();
 	}
 
-	async function getFilterDateDataByUser(from_date: string, to_date: string) {
-		window.openLoading();
-		props = await getListFilterDatePurchaseService(from_date, to_date);
-		window.closeLoading();
+	async function onChangePerPage(event: CustomEvent<number>){
+		perPage = event.detail;
+		await getData();
+	}
+
+	async function onSort(event: CustomEvent<string>){
+		sort = event.detail;
+		await getData();
 	}
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
 	<Table
 		createLabel="Xuất excel"
-		dataWithPagination={props}
+		dataWithPagination={listPurchase}
 		{tableColumns}
 		{keyword}
+		{sort}
+		{perPage}
 		navTab
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
-	>
+		on:changePerPage={onChangePerPage}
+		on:sorting={onSort}
+	>	
 		<div slot="label-search">
 			<p class="label-search mt-2 ml-4 mr-4">Search:</p>
 		</div>
@@ -140,8 +158,10 @@
 				{row.agent ? row.agent.phone : ''}
 			{:else if cell.key === 'agent_email'}
 				{row.agent ? row.agent.email : ''}
+			{:else if cell.key === 'agent_level'}
+				{row.agent ? `Cấp ${row.agent.level}` : ''}
 			{:else if cell.key === 'package_name'}
-				{row.transfer_details ? row.transfer_details[0].package.package_name : ''}
+				{row.purchase_details ? row.purchase_details[0].package.package_name : ''}
 			{:else}
 				{cell.value}
 			{/if}

@@ -11,7 +11,7 @@
 	}
 </script>
 
-<div class="mb-4">
+<div class="mb-4 tabs">
 	<ul class="nav nav-tabs " id="myTab" role="tablist" style="{styleTab}">
 		{#each tabs as tab}
 			<li
@@ -25,12 +25,15 @@
 </div>
 
 <style>
+	.tabs {
+		position: absolute;
+    	z-index: 100;
+	}
 	.nav-tabs {
 		border-bottom: transparent;
 		z-index: 1;
 		margin-left: 38px;
 		margin-top: 24px;
-
 	}
 	.text-green a {
 		color: #2dce89;

@@ -2,9 +2,16 @@
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
+		const perPage = url.searchParams.get('perPage') || 10;
+		const sort = url.searchParams.get('sort') || '-id';
 		let numberDatas: DataWithPagination<CategoryNumber> | undefined;
 		const res = await fetch(
-			`/p/category-numbers?${objectToQueryString({ keyword, page: currentPage })}`
+			`/p/category-numbers?${objectToQueryString({
+				filter: { description: keyword },
+				page: currentPage,
+				perPage,
+				sort
+			})}`
 		);
 		if (res.ok) {
 			const data = await res.json();
@@ -17,7 +24,9 @@
 			props: {
 				keyword,
 				currentPage,
-				numberDatas
+				numberDatas,
+				sort,
+				perPage
 			}
 		};
 	};
@@ -44,8 +53,9 @@
 	export let numberDatas: DataWithPagination<CategoryNumber>;
 	export let keyword: string;
 	export let currentPage: number;
+	export let sort: string;
+	export let perPage: number;
 	onMount(async () => {
-		console.log(numberDatas);
 		// let topmenu = document.getElementsByTagName('nav').item(0);
 		// topmenu.classList.add('bg-danger');
 		// topmenu.classList.add('navbar-dark');
@@ -103,8 +113,12 @@
 	async function getData() {
 		window.openLoading();
 		numberDatas = await getListCategoryNumbersService({
-			keyword,
-			page: currentPage
+			filter: {
+				description: keyword
+			},
+			page: currentPage,
+			sort,
+			perPage
 		});
 		window.closeLoading();
 	}
@@ -157,6 +171,16 @@
 		}
 		return '';
 	}
+
+	async function onChangePerPage(event: CustomEvent<number>){
+		perPage = event.detail;
+		await getData();
+	}
+
+	async function onSort(event: CustomEvent<string>){
+		sort = event.detail;
+		await getData();
+	}
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -181,9 +205,13 @@
 		dataWithPagination={numberDatas}
 		{tableColumns}
 		{keyword}
+		{sort}
+		{perPage}
 		on:create={onCreate}
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
+		on:changePerPage={onChangePerPage}
+		on:sorting={onSort}
 	>
 		<div slot="cell" let:row let:cell>
 			{#if cell.key === 'actions'}

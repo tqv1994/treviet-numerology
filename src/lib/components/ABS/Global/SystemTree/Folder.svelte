@@ -1,19 +1,36 @@
 <script lang="ts" context="module">
-	export function getDataTreeView(data: AgentTreeView[], ref_code_agent: string | null): AgentTreeView[] {
+	export function getDataTreeView(
+		data: AgentTreeView[],
+		ref_code_agent: string | null,
+		limit_level: number | null
+	): AgentTreeView[] {
 		let results: AgentTreeView[] = [];
-		const agents = data.filter((item) => item.ref_code_agent === ref_code_agent);
+		let agents;
+
+		if (limit_level) {
+			agents = data.filter((item) => {
+				if (item.ref_code_agent === ref_code_agent && item.level < limit_level) {
+					return item;
+				}
+			});
+		} else {
+			agents = data.filter((item) => item.ref_code_agent === ref_code_agent);
+		}
 		if (agents.length > 0) {
 			for (const agent of agents) {
 				results.push({
 					...agent,
-					children: getDataTreeView(data, agent.ref_code_owner)
+					children: getDataTreeView(data, agent.ref_code_owner, limit_level)
 				});
 			}
 		}
 		return results;
 	}
 </script>
+
 <script lang="ts">
+	import SideBarItem from '$lib/components/SidebarPlugin/SideBarItem.svelte';
+
 	import type { AgentTreeView } from '$lib/stores/agent';
 
 	export let expanded: boolean = false;
@@ -21,9 +38,15 @@
 	export let agentTreeViews: AgentTreeView[];
 	export let ref_code: string | null;
 	let name: string;
+	export let role: string;
+	let limit_level: number | null;
+	export let colors: [] = [];
 
 	$: if (agentTreeViews && agentTreeViews.length > 0) {
-		trees = getDataTreeView(agentTreeViews, ref_code);
+		if (role === 'member') {
+			limit_level = 3;
+		}
+		trees = getDataTreeView(agentTreeViews, ref_code, limit_level);
 	}
 
 	function toggle() {
@@ -31,21 +54,17 @@
 	}
 
 	function getType(agent: AgentTreeView) {
-		if (agent.level === 0) {
-			return 'danger';
-		} else if (agent.level === 1) {
-			return 'success';
-		} else {
-			return 'default';
-		}
+		const color = colors.find((item, index) => agent.level == index);
+		return color;
 	}
 </script>
 
 {#if (trees || []).length > 0}
 	{#each trees as tree}
+		<!-- {#if role != 'member' && tree.level < 2} -->
 		<div class="folder">
 			<ul>
-				<li class="text-{getType(tree)}">
+				<li style={`color: #${getType(tree)}`}>
 					<svg
 						width="15"
 						height="16"
@@ -66,7 +85,13 @@
 							} báo cáo đã chuyển`}
 						</span>
 						{#if expanded}
-							<svelte:self {agentTreeViews} ref_code={tree.ref_code_owner} expanded={false} />
+							<svelte:self
+								{agentTreeViews}
+								ref_code={tree.ref_code_owner}
+								expanded={true}
+								{role}
+								{colors}
+							/>
 						{/if}
 					{:else}
 						<span on:click={toggle}>
@@ -78,6 +103,7 @@
 				</li>
 			</ul>
 		</div>
+		<!-- {/if} -->
 	{/each}
 {/if}
 

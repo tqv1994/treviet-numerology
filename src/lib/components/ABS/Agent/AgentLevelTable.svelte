@@ -1,9 +1,9 @@
 <script lang="ts" context="module">
 	export type DataTableAgenctLevel = {
-		name: string; // Tên gói
-		report_number: number; // Số báo cáo
-		expense: number; // Chi phí
-		duration: string; // Thời hạn; Vd: 1 năm
+		package_name: string; // Tên gói
+		amount: number; // Số báo cáo
+		price: number; // Chi phí
+		expiry_time: string; // Thời hạn; Vd: 1 năm
 		color: string; // Màu sắc của gói
 	};
 </script>
@@ -16,6 +16,7 @@
 	import jQuery from 'jquery';
 	import dt from 'datatables.net';
 	import dtCss from 'datatables.net-dt';
+import { formatCurrencyVN } from '$lib/helper/currency';
 	let tableElement;
 	onMount(() => {
 		window.jq = jQuery;
@@ -54,7 +55,7 @@
 						<i class="sort-caret descending" />
 					</span>
 				</th>
-				<th style="min-width: 90px; width: 30%">
+				<th style="min-width: 90px; width: 36%">
 					số báo cáo
 					<span class="caret-wrapper">
 						<i class="sort-caret ascending" />
@@ -81,11 +82,11 @@
 			{#each tableData as element}
 				<tr>
 					<td>
-						<div class="font-weight-600 text-{element.color}">{element.name}</div>
+						<div class="font-weight-600" style={`color: #${element.color}`}>{element.package_name}</div>
 					</td>
-					<td>{element.report_number}</td>
-					<td>{element.expense}</td>
-					<td>{element.duration}</td>
+					<td>{element.amount}</td>
+					<td>{formatCurrencyVN(element.price)}</td>
+					<td>{element.expiry_time} năm</td>
 				</tr>
 			{/each}
 		</tbody>

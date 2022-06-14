@@ -10,7 +10,7 @@ export const getListCategoryNumbersService = async (
 	queryParams?: QueryParams
 ): Promise<DataWithPagination<CategoryNumber>> => {
 	return new Promise(async (resolve, reject) => {
-		const res = await pget(`${endpoint}/searches?${objectToQueryString(queryParams)}`);
+		const res = await pget(`${endpoint}/filter?${objectToQueryString(queryParams)}`);
 		if (res.ok) {
 			const data: { results: DataWithPagination<CategoryNumber> } = await res.json();
 			resolve(data.results);

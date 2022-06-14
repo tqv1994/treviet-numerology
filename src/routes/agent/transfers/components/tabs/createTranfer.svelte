@@ -27,6 +27,7 @@
 
 	let formData: TransferForm = reset();
 	export let myChildAgents: AgentTreeView[];
+	export let myPackages: [];
 	function reset(): TransferForm {
 		return {
 			agent_id: getMyAgent($authStore)?.id || undefined,
@@ -38,32 +39,40 @@
 	}
 
 	async function onSubmit() {
-		window.openLoading();
-		try {
-			await schemaValidator.validate({ ...formData }, { abortEarly: false });
-			const res = await ppost('transfers', formData);
-			if (res.ok) {
-				window.notice({
-					text: 'Tạo báo cáo thành công',
-					type: 'success'
-				});
-				formData = reset();
-				isReloadTab.set(true);
-			} else {
-				const error = await res.json();
-				window.notice({
-					text: getErrorMessage(error.errors),
-					type: 'danger'
-				});
+		const user = $authStore
+		if (user?.google2fa_secret === null) {
+			window.notice({
+				text: 'Bạn chưa tạo mã 2FA',
+				type: 'danger'
+			});
+		} else {
+			window.openLoading();
+			try {
+				await schemaValidator.validate({ ...formData }, { abortEarly: false });
+				const res = await ppost('transfers', formData);
+				if (res.ok) {
+					window.notice({
+						text: 'Tạo báo cáo thành công',
+						type: 'success'
+					});
+					formData = reset();
+					isReloadTab.set(true);
+				} else {
+					const error = await res.json();
+					window.notice({
+						text: getErrorMessage(error.errors),
+						type: 'danger'
+					});
+				}
+			} catch (err) {
+				if (err.inner) {
+					errors = err.inner.reduce((acc, err) => {
+						return { ...acc, [err.path]: err.message };
+					}, {});
+				}
 			}
-		} catch (err) {
-			if (err.inner) {
-				errors = err.inner.reduce((acc, err) => {
-					return { ...acc, [err.path]: err.message };
-				}, {});
-			}
+			window.closeLoading();
 		}
-		window.closeLoading();
 	}
 </script>
 
@@ -114,7 +123,7 @@
 				</div>
 				<div class="col-lg-8">
 					<div class="">
-						<BaseInput error={errors.one_time_password} placeholder="208304" bind:value={formData.one_time_password} />
+						<BaseInput error={errors.one_time_password} placeholder="Nhập mã 2FA" bind:value={formData.one_time_password} />
 					</div>
 				</div>
 			</div>

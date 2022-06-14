@@ -1,14 +1,13 @@
 <script lang="ts" context="module">
 	export type DataTableAgentList = {
-		name: string;
-		image: string;
-		sales: string; // "4.569"
-		unique: string; // "340"
-		bounceRate: string; //"46.53%"
-		bounceRateDirection: 'up' | 'down';
-		progress: number;
-		progressType: 'gradient-danger' | 'gradient-primary' | 'gradient-info' | 'gradient-warning';
+		username: string;
+		agentname: string;
+		created_at: string; 
+		phone: string;
+		email: string;
+		status: string;
 	};
+
 </script>
 
 <script lang="ts">
@@ -56,21 +55,21 @@
 		<thead class="w-100 pagevisitsthead">
 			<tr>
 				<th style="min-width: 200px; width: 20%;">
-					họ và tên
+					Tên đại lý
 					<span class="caret-wrapper">
 						<i class="sort-caret ascending" />
 						<i class="sort-caret descending" />
 					</span>
 				</th>
 				<th style="min-width: 150px; width: 20%;">
-					doanh số
+					Số điện thoại
 					<span class="caret-wrapper">
 						<i class="sort-caret ascending" />
 						<i class="sort-caret descending" />
 					</span>
 				</th>
 				<th style="min-width: 150px; width: 20%;">
-					cấp độ
+					Email
 					<span class="caret-wrapper">
 						<i class="sort-caret ascending" />
 						<i class="sort-caret descending" />
@@ -81,34 +80,41 @@
 		<tbody class="pagevisitsTbody">
 			{#each tableData as element}
 				<tr>
-					<td colspan="1" rowspan="1" style="min-width: 200px; width: 20%;">
+					<!-- <td colspan="1" rowspan="1" style="min-width: 200px; width: 20%;">
 						<div class="list-group list-group-flush list my--3">
 							<div class="list-group-item px-0" key={element.image}>
 								<div class="row align-items-center">
 									<div class="col-md-auto">
-										<!-- Avatar -->
 										<a href="/" class="avatar rounded-circle">
 											<img src={element.image} class="rounded-circle" alt="Image placeholder" />
 										</a>
 									</div>
 									<div class="col ml--2">
 										<h4 class="mb-0">
-											<a href="/">{element.name}</a>
+											<a href="/">{element.agentname}</a>
 										</h4>
 									</div>
 								</div>
 							</div>
 						</div>
-					</td>
+					</td> -->
 					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
-						{element.sales}
+						{element.agentname}
 					</td>
+
 					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
+						{element.phone}
+					</td>
+
+					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
+						{element.email}
+					</td>
+					<!-- <td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
 						<div class="d-flex align-items-center">
 							<span class="mr-2">{element.progress}%</span>
 							<BaseProgress type={element.progressType} value={element.progress} />
 						</div>
-					</td>
+					</td> -->
 				</tr>
 			{/each}
 		</tbody>

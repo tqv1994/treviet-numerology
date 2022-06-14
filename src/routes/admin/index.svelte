@@ -13,6 +13,11 @@
 	import AgentLevelTable from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import { appName } from '$lib/env';
+	import type { DataWithPagination } from "$lib/stores/type";
+	import type { Load } from "@sveltejs/kit";
+	import { objectToQueryString } from "$lib/utils/string";
+	import { packagesStore, type Package } from "$lib/stores/package";
+	
 	onMount(function () {
 		// window.fusionCharts = FusionCharts;
 		// window.charts = Charts;
@@ -278,44 +283,6 @@
 			progressType: 'gradient-info'
 		}
 	];
-
-	let agentLevelData: DataTableAgenctLevel[] = [
-		{
-			name: 'Gói 1',
-			report_number: 1,
-			expense: 2000000,
-			duration: '1 năm',
-			color: 'success'
-		},
-		{
-			name: 'Gói 5',
-			report_number: 5,
-			expense: 5000000,
-			duration: '1 năm',
-			color: 'warning'
-		},
-		{
-			name: 'Gói 25',
-			report_number: 25,
-			expense: 12000000,
-			duration: '1 năm',
-			color: 'danger'
-		},
-		{
-			name: 'Gói 125',
-			report_number: 125,
-			expense: 32000000,
-			duration: '1 năm',
-			color: 'primary'
-		},
-		{
-			name: 'Gói 625',
-			report_number: 625,
-			expense: 79000000,
-			duration: '2 năm',
-			color: 'default'
-		}
-	];
   </script>
   
   <div transition:fade={{ duration: 250 }}>
@@ -397,7 +364,7 @@
 				<AgentList tableData={agentList} />
 			</div>
 			<div class="col-xl-4">
-				<AgentLevelTable tableData={agentLevelData} />
+				<AgentLevelTable tableData={$packagesStore} />
 			</div>
 		</div>
 	</div>

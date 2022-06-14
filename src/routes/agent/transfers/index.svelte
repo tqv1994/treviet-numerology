@@ -15,6 +15,9 @@
 			} catch (error) {
 				console.log(error);
 			}
+			if(myAgent.ref_code_agent === null){
+				return redirectAgent('/transfers/transaction');
+			}
 		}
 		return {
 			props: {
@@ -34,20 +37,22 @@
 	import { onMount } from 'svelte';
 	import HistoryReceiveReports from '../transfers/components/tabs/HistoryReceiveReports.svelte';
 	import HistoryTransferReports from '../transfers/components/tabs/HistoryTransferReports.svelte';
-	onMount(function () {});
 	import CreateTranfer from '../transfers/components/tabs/createTranfer.svelte';
 	import type { Load } from '@sveltejs/kit';
 	import { getMyAgent } from '$lib/utils/user';
-	import type { AgentTreeView } from '$lib/stores/agent';
+	import type { Agent, AgentTreeView } from '$lib/stores/agent';
 	import { getDataTreeView } from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
 	import { writable } from 'svelte/store';
 	import Card from '$lib/components/Cards/Card.svelte';
+	import { redirectAgent } from '$lib/components/redirect.svelte';
 	let tabs: Tab[] = [
 		{ id: 1, name: 'Lịch sử chuyển map', component: HistoryTransferReports },
 		{ id: 2, name: 'Lịch sử nhận map', component: HistoryReceiveReports }
 	];
 	let tabActive: Tab = tabs[0];
 	export let myChildAgents: AgentTreeView[];
+	export let myAgent: Agent;
+	
 </script>
 
 <div transition:fade={{ duration: 250 }}>

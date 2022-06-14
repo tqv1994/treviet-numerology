@@ -15,7 +15,8 @@
 	import { objectToQueryString } from '$lib/utils/string';
 	import { formatDate } from '$lib/utils/datetime';
 	export let name = 'Tạo báo cáo';
-
+	let perPage: number = 10;
+	let sort: string = "-id";
 	onMount(async () => {
 		await getData();
 	});
@@ -65,13 +66,23 @@
 	export async function getData() {
 		const res = await pget(
 			`transfers/${$authStore?.id}/receive?${objectToQueryString({
-				perPage: 10
+				sort,
+				perPage
 			})}`
 		);
 		if (res.ok) {
 			const data = await res.json();
 			reportDatas = data.results;
 		}
+	}
+	async function onChangePerPage(event: CustomEvent<number>){
+		perPage = event.detail;
+		await getData();
+	}
+
+	async function onSort(event: CustomEvent<string>){
+		sort = event.detail;
+		await getData();
 	}
 </script>
 
@@ -81,8 +92,12 @@
 		{tableColumns}
 		{keyword}
 		navTab
+		{perPage}
+		{sort}
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
+		on:sorting={onSort}
+		on:changePerPage={onChangePerPage}
 	>
 		<div slot="cell" let:row let:cell>
 			{#if cell.key === 'agent_receive_id'}

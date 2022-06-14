@@ -35,6 +35,19 @@
 			</div>
 		</div>
 	</form>
+	<div>
+		<span class='label-link-2fa'>
+			* Để xác minh 2FA vui lòng tải phần mềm Google Authenticator về Smartphone của bạn
+		</span>
+		<div class="download-authentication mt-3">
+			<div class="link-download">
+				<a href="https://apps.apple.com/vn/app/google-authenticator/id388497605"><i class="fa fa-download" aria-hidden="true"></i>  Tải về cho IOS</a>
+			</div>
+			<div class="link-download mt-3">
+				<a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=vi&gl=US"><i class="fa fa-download" aria-hidden="true"></i>   Tải về cho Android </a>
+			</div>
+		</div>
+	</div>
 </div>
 <style>
 	.password-strength {
@@ -49,5 +62,10 @@
 
 	.form-control-label {
 		font-size: 600;
+	}
+
+	.label-link-2fa{
+		color: red;
+		font-style: italic;
 	}
 </style>

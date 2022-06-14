@@ -5,11 +5,13 @@ import {
   getErrorMessage,
   getResponseAuthorizationHeaders,
   getResponseStatus,
+  handleError,
   ResponseHeaders,
 } from "$lib/utils/response";
 
 import { apiUrl, frontendUrl } from "$lib/env";
 import { RESET_PASSWORD_LINK } from "$lib/utils/const";
+import { pget } from "$lib/utils/fetch";
 
 export type LoginForm = {
   email: string;
@@ -140,4 +142,20 @@ export const getMeService = async (): Promise<User> => {
       reject(getErrorMessage(error.errors));
     }
   });
+};
+
+export const getUserByUserName = async (
+	name: string,
+): Promise<[]> => {
+	return new Promise(async (resolve, reject) => {
+		const res = await pget(`users?keyword=${name}&sort=name`);
+		if (res.ok) {
+			const data = await res.json();
+			resolve(data.results.data[0]);
+		} else {
+			const error = await res.json();
+			handleError(error.errors);
+			reject(error);
+		}
+	});
 };

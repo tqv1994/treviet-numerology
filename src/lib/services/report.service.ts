@@ -10,15 +10,13 @@ export const getListReportsService = async (
 	queryParams: QueryParams
 ): Promise<DataWithPagination<Report>> => {
 	return new Promise(async (resolve, reject) => {
-		const res = await fetch(`${apiUrl}${endpoint}?${objectToQueryString(queryParams)}`, {
-			method: 'GET',
-			headers: getResponseAuthorizationHeaders()
-		});
+		const res = await pget(`${endpoint}/filter?${objectToQueryString(queryParams)}`);
 		if (res.ok) {
 			const data: { results: DataWithPagination<Report> } = await res.json();
 			resolve(data.results);
 		} else {
 			const error = await res.json();
+			handleError(error.errors);
 			reject(error);
 		}
 	});
@@ -46,7 +44,7 @@ export const getListFilterDateReportService = async (
 	to_date: string
 ): Promise<DataWithPagination<Report>> => {
 	return new Promise(async (resolve, reject) => {
-		const res = await pget(`${endpoint}/filter?from_date=${from_date}&to_date=${to_date}`);
+		const res = await pget(`${endpoint}/filter?filter[from_date]=${from_date}&filter[to_date]=${to_date}`);
 		if (res.ok) {
 			const data: { results: DataWithPagination<Report> } = await res.json();
 			resolve(data.results);

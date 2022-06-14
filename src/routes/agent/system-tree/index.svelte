@@ -2,6 +2,7 @@
 	export const load: Load = async ({ fetch, session, url }) => {
 		const myAgent = getMyAgent(session.user);
 		let treeViews: AgentTreeView[];
+		let role = session.user.roles[0]?.name || '';
 		if (myAgent) {
 			try {
 				const res = await fetch(`/p/tree-view/${myAgent.id}`);
@@ -20,7 +21,8 @@
 		return {
 			props: {
 				treeViews,
-				myAgent
+				myAgent,
+				role
 			}
 		};
 	};
@@ -34,8 +36,17 @@
 	import Folder from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
 	import { getMyAgent } from '$lib/utils/user';
 	import type { Agent, AgentTreeView } from '$lib/stores/agent';
+	import { packagesStore } from '$lib/stores/package';
 	export let myAgent: Agent;
 	export let treeViews: AgentTreeView[];
+	export let role: string;
+
+	let packages = $packagesStore;
+	let listColor = convertListColor(packages);
+	
+	function convertListColor(packages) {
+		return packages.map(item => item.color).reverse();
+	}
 </script>
 
 <div transition:fade={{ duration: 250 }}>
@@ -66,6 +77,8 @@
 								agentTreeViews={treeViews}
 								ref_code={myAgent.ref_code_agent}
 								expanded={true}
+								role={role}
+								colors={listColor}
 							/>
 						{/if}
 					</Card>

@@ -6,7 +6,7 @@
 	import { getAge, getAvatar, getReferralLink } from '$lib/utils/user';
 	import { pget } from '$lib/utils/fetch';
 	import Image from '$lib/components/ABS/Image.svelte';
-import { STATUS } from '$lib/stores/type';
+	import { STATUS } from '$lib/stores/type';
 
 	// import { navOptions } from  '../../views/Dashboard/Tab/Nav.svelte';	// import application navigation
 	// let selected = navOptions[0];	// keep track of the selected 'page' object (default to the about component since we must have local db connection established first)
@@ -55,19 +55,19 @@ import { STATUS } from '$lib/stores/type';
 		window.closeLoading();
 	}
 
-	function getAgentStatusLabel(){
+	function getAgentStatusLabel() {
 		let result: string = 'Đang chờ xác thực';
-		authStore.subscribe((u)=>{
-			if(u && u.agents && u.agents.length > 0){
+		authStore.subscribe((u) => {
+			if (u && u.agents && u.agents.length > 0) {
 				result = u.agents[0].status.toString();
 			}
 		});
 		return result;
 	}
 
-	function getAgentStatusType(){
+	function getAgentStatusType() {
 		let result: 'danger' | 'success' = 'danger';
-		if(getAgentStatusLabel() === "Đã duyệt"){
+		if (getAgentStatusLabel() === 'Đã duyệt') {
 			result = 'success';
 		}
 		return result;
@@ -108,7 +108,7 @@ import { STATUS } from '$lib/stores/type';
 				<div class="user-status">
 					<i class="ni education_hat mr-2" />
 					Trạng thái tài khoản:
-					<p class="user-status-text text-{getAgentStatusType()}"> {getAgentStatusLabel()}</p>
+					<p class="user-status-text text-{getAgentStatusType()}">{getAgentStatusLabel()}</p>
 				</div>
 			</div>
 			<div>
@@ -117,7 +117,7 @@ import { STATUS } from '$lib/stores/type';
 						<BaseInput
 							type="text"
 							label="Link giới thiệu"
-							value={getReferralLink($authStore)}
+							value={getReferralLink($authStore) ? getReferralLink($authStore) : 'Vui lòng lấy link'}
 							model=""
 							disabled
 							inputId="referralCode"
@@ -125,14 +125,11 @@ import { STATUS } from '$lib/stores/type';
 					</div>
 					<div class="col-md-12">
 						<div class="d-flex justify-content-center">
-							{#if getReferralLink($authStore)}
 								<button on:click={copyCode} class="btn btn-success">Sao chép link giới thiệu</button
 								>
-							{:else}
 								<button on:click={createReferralLink} class="btn btn-warning"
 									>Tạo link giới thiệu</button
 								>
-							{/if}
 						</div>
 					</div>
 				</div>

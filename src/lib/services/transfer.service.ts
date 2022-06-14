@@ -1,6 +1,6 @@
 import { apiUrl } from "$lib/env";
 import type { Agent } from "$lib/stores/agent";
-import type { Transfer, TransferFormData } from "$lib/stores/transfer";
+import type { Transfer, TransferForm } from "$lib/stores/transfer";
 import type { DataWithPagination, QueryParams } from "$lib/stores/type";
 import { pget } from "$lib/utils/fetch";
 import {
@@ -15,7 +15,7 @@ export const getListTransfersService = async (
 	queryParams?: QueryParams
 ): Promise<DataWithPagination<Transfer>> => {
 	return new Promise(async (resolve, reject) => {
-		const res = await pget(`${endpoint}?${objectToQueryString(queryParams)}`);
+		const res = await pget(`${endpoint}/filter?${objectToQueryString(queryParams)}`);
 		if (res.ok) {
 			const data: { results: DataWithPagination<Transfer> } = await res.json();
 			resolve(data.results);
@@ -27,7 +27,7 @@ export const getListTransfersService = async (
 	});
 };
 
-export const createTransferService = async (formData: TransferFormData): Promise<Transfer> => {
+export const createTransferService = async (formData: TransferForm): Promise<Transfer> => {
 	return new Promise(async (resolve, reject) => {
 		const res = await fetch(`${apiUrl}${endpoint}`, {
 			method: 'POST',
@@ -49,17 +49,14 @@ export const getListFilterDateTransferService = async (
 	to_date: string
 ): Promise<DataWithPagination<Transfer>> => {
 	return new Promise(async (resolve, reject) => {
-		const res = await pget(`${endpoint}/filter?from_date=${from_date}&to_date=${to_date}`);
+		const res = await pget(`${endpoint}/filter?filter[from_date]=${from_date}&filter[to_date]=${to_date}`);
 		if (res.ok) {
 			const data: { results: DataWithPagination<Transfer> } = await res.json();
-			if (data.results.data && data.results.data?.length > 0) {
-				resolve(data.results);
-			} else {
-				reject(getErrorMessage('Không tìm thấy điều này!'));
-			}
+			resolve(data.results);
 		} else {
 			const error = await res.json();
-			reject(getErrorMessage(error.errors));
+			handleError(error.errors);
+			reject(error);
 		}
 	});
 };

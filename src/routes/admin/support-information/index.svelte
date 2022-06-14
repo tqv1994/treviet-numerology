@@ -3,7 +3,7 @@
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
 		let faqDatas: DataWithPagination<Faq> | undefined;
-		const res = await fetch(`/p/faqs?${objectToQueryString({ keyword, page: currentPage })}`);
+		const res = await fetch(`/p/faqs/filter?${objectToQueryString({ perPage: 999 })}`);
 		console.log(res);
 
 		if (res.ok) {

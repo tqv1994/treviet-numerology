@@ -105,6 +105,11 @@
 				được hỗ trợ
 			</p>
 		</div>
+		<div class="text-right policy-agent" >
+			<a href="/policy">
+				Điều khoản đại lý
+			</a>
+		</div>
 	</form>
 	<div slot="footer">
 		<div class="row mt-3">
@@ -117,3 +122,9 @@
 		</div>
 	</div>
 </Auth>
+<style language="scss">
+ .policy-agent{
+	font-size: 14px;
+	text-decoration: underline;
+ }
+</style>z

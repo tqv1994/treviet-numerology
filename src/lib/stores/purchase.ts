@@ -26,7 +26,7 @@ export type PurchaseDetail = Identifiable & {
 // Type form mua gói
 export type PurchaseFormData = {
     username?: string;
-    agent_name?: string;
-    package_id?: number;
-    code_2fa?: string; 
+    agent_id?: string;
+    packages_id?: number;
+    one_time_password?: string; 
 }

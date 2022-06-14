@@ -1,6 +1,6 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, params: { id } }) => {
-		const res = await fetch(`/p/packages?id=${id}`);
+		const res = await fetch(`/p/packages?id=${id}&sort=id`);
 		
 		if (res.ok) {
 			const data: { results: DataWithPagination<Package> } = await res.json();

@@ -1,6 +1,15 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, url }) => {
 		const myAgent = getMyAgent(session.user);
+		const res = await fetch(`/p/packages?sort=id`);
+		if (res.ok) {
+			const data = await res.json();
+			packagesStore.set(data.results.data);
+		} else {
+			const err = await res.json();
+			console.error(err);
+		}
+		
 		if (!session.user || !myAgent) {
 			redirect('/');
 		}
@@ -25,6 +34,7 @@
 	import { redirect } from '$lib/components/redirect.svelte';
 	import Loading from '$lib/components/ABS/Loading.svelte';
 	import { getMyAgent } from '$lib/utils/user';
+	import { packagesStore } from '$lib/stores/package';
 
 	export let type = 'default';
 	export let pathname: string;
@@ -114,7 +124,7 @@
 				<SideBarItem
 					link={{
 						name: 'Báo cáo',
-						icon: 'ni ni-ui-04',
+						icon: 'ni ni-single-copy-04 ',
 						path: '/agent/reports',
 						isActive: checkMenuActive('/agent/reports', pathname, true)
 					}}
@@ -123,7 +133,7 @@
 				<SideBarItem
 					link={{
 						name: 'Cây hệ thống',
-						icon: 'ni ni-ui-04',
+						icon: 'ni ni-books',
 						path: '/agent/system-tree',
 						isActive: checkMenuActive('/agent/system-tree', pathname)
 					}}
@@ -132,20 +142,12 @@
 				<SideBarItem
 					link={{
 						name: 'Chuyển map',
-						icon: 'ni ni-ui-04',
+						icon: 'ni ni-ungroup',
 						path: '/agent/transfers',
 						isActive: checkMenuActive('/agent/transfers', pathname)
 					}}
 				/>
-
-				<SideBarItem
-					link={{
-						name: 'Tài khoản',
-						icon: 'ni ni-circle-08',
-						path: '/agent/profile',
-						isActive: checkMenuActive('/agent/profile', pathname)
-					}}
-				/>
+				
 				<SideBarItem
 					link={{
 						name: 'Hỗ trợ',

@@ -2,8 +2,18 @@
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
+		const sort = url.searchParams.get('sort') || '-id';
+		const perPage = url.searchParams.get('perPage') || 10;
 		let faqsDatas: DataWithPagination<Faq> | undefined;
-		const res = await fetch(`/p/faqs?${objectToQueryString({ keyword, page: currentPage })}`);
+
+		const res = await fetch(
+			`/p/faqs/filter?${objectToQueryString({
+				filter: { question: keyword },
+				page: currentPage,
+				sort,
+				perPage
+			})}`
+		);
 		if (res.ok) {
 			const data = await res.json();
 			faqsDatas = data.results;
@@ -16,7 +26,9 @@
 			props: {
 				keyword,
 				currentPage,
-				faqsDatas
+				faqsDatas,
+				sort,
+				perPage
 			}
 		};
 	};
@@ -24,62 +36,53 @@
 
 <script lang="ts">
 	import BaseHeader from '$lib/components/BaseHeader.svelte';
-	import Card from '$lib/components/Cards/Card.svelte';
-	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
-	import Flatpickr from 'svelte-flatpickr';
-    import Table from '$lib/components/ABS/Global/Datatable/Table.svelte';
+	import Table from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import 'flatpickr/dist/flatpickr.css';
 	import 'flatpickr/dist/themes/light.css';
-	import type { Faq , FaqsFormData } from '$lib/stores/faq';
+	import type { Faq, FaqsFormData } from '$lib/stores/faq';
 	import type { Load } from '@sveltejs/kit';
-    import type { DataWithPagination } from '$lib/stores/type';
-    import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
+	import type { DataWithPagination } from '$lib/stores/type';
+	import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import { fade } from 'svelte/transition';
-	import { onMount } from 'svelte';
-	import { ppost } from '$lib/utils/fetch';
 	import { getListFaqsService } from '$lib/services/faqs.service';
 	import { objectToQueryString } from '$lib/utils/string';
 	import { redirectAdmin } from '$lib/components/redirect.svelte';
 
-    export let faqsDatas: DataWithPagination<Faq> | undefined;
+	export let faqsDatas: DataWithPagination<Faq> | undefined;
 	export let keyword: string;
 	export let currentPage: number;
 	export let name = 'FAQs';
+	export let sort: string;
+	export let perPage: number;
 
 	let formData: FaqsFormData;
 
-	console.log(faqsDatas);
-	
 	let suffix = false;
 
-	function onEdit(Faq: Faq) {
-		console.log(Faq);
-		redirectAdmin(`/faqs/update/${Faq.id}`);
+	function onEdit(faq: Faq) {
+		redirectAdmin(`/faqs/update/${faq.id}`);
 	}
 
-    let tableColumns: TableColumn[] = [
-		{
-			type: 'selection'
-		},
+	let tableColumns: TableColumn[] = [
 		{
 			prop: 'question',
 			label: 'Câu hỏi',
 			minWidth: 160,
-			position:'text-align: center;',
-			sortable: false
+			position: 'text-align: center;',
+			sortable: true
 		},
 		{
 			prop: 'answer',
 			label: 'Câu trả lời',
 			minWidth: 220,
-			position:'text-align: center;',
-			sortable: false
+			position: 'text-align: center;',
+			sortable: true
 		},
 		{
 			prop: 'actions',
 			label: 'Hành động',
 			minWidth: 100,
-			position:'text-align: center;',
+			position: 'text-align: center;',
 			sortable: false
 		}
 	];
@@ -94,16 +97,25 @@
 		await getData();
 	}
 
-	
 	async function getData() {
 		window.openLoading();
 		faqsDatas = await getListFaqsService({
-		  keyword,
-		  page: currentPage,
+			filter: { question: keyword },
+			page: currentPage,
+			sort,
+			perPage
 		});
 		window.closeLoading();
-		console.log(faqsDatas);
-		
+	}
+
+	async function onChangePerPage(event: CustomEvent<number>){
+		perPage = event.detail;
+		await getData();
+	}
+
+	async function onSort(event: CustomEvent<string>){
+		sort = event.detail;
+		await getData();
 	}
 </script>
 
@@ -118,7 +130,8 @@
 			</div>
 			<div class="col-lg-6 col-5 text-right">
 				<button class="btn btn-success mt-4 s-oXUrrgDkZpjO">
-					<a href="/admin/faqs/create" style="color:white">Thêm mới FAQS</a></button>
+					<a href="/admin/faqs/create" style="color:white">Thêm mới FAQS</a></button
+				>
 			</div>
 		</div>
 	</BaseHeader>
@@ -131,7 +144,13 @@
 					dataWithPagination={faqsDatas}
 					{tableColumns}
 					{keyword}
-					on:changeCurrentPage={paginationChange}>
+					{sort}
+					{perPage}
+					on:changePerPage={onChangePerPage}
+					on:sorting={onSort}
+					on:changeCurrentPage={paginationChange}
+					on:search={onSearch}
+				>
 					<div slot="cell" let:row let:cell class="d-flex justify-content-center">
 						{#if cell.key === 'actions'}
 							<div class="d-inline" style="color:#000;">
@@ -144,14 +163,14 @@
 									data-placement="top"
 									title="Sửa"
 								>
-									<i class="fas fa-edit" style="color:#2dce89"/>
+									<i class="fas fa-edit" style="color:#2dce89" />
 								</a>
 							</div>
-						{:else if cell.key === 'package_name'} 
+						{:else if cell.key === 'package_name'}
 							<b style={`color: #${row.color}`}>{cell.value}</b>
-						{:else if cell.key === 'amount'} 
+						{:else if cell.key === 'amount'}
 							{`${cell.value} bài`}
-						{:else if cell.key === 'expiry_time'} 
+						{:else if cell.key === 'expiry_time'}
 							{`${cell.value} năm`}
 						{:else}
 							{cell.value}

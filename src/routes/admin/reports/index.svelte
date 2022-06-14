@@ -2,8 +2,17 @@
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
+		const sort = url.searchParams.get('sort') || '-id';
+		const perPage = url.searchParams.get('perPage') || 10;
 		let reportDatas: DataWithPagination<Report> | undefined;
-		const res = await fetch(`/p/reports?${objectToQueryString({ keyword, page: currentPage })}`);
+		const res = await fetch(
+			`/p/reports/filter?${objectToQueryString({
+				filter: { name: keyword },
+				page: currentPage,
+				sort,
+				perPage
+			})}`
+		);
 
 		if (res.ok) {
 			const data = await res.json();
@@ -18,7 +27,9 @@
 			props: {
 				keyword,
 				currentPage,
-				reportDatas
+				reportDatas,
+				perPage,
+				sort
 			}
 		};
 	};
@@ -39,7 +50,7 @@
 	import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import type { Load } from '@sveltejs/kit';
 	import Flatpickr from 'svelte-flatpickr';
-import { formatNewDate } from '$lib/helper/datetime';
+	import { formatNewDate } from '$lib/helper/datetime';
 
 	let filterTime = true;
 
@@ -47,11 +58,11 @@ import { formatNewDate } from '$lib/helper/datetime';
 	export let reportDatas: DataWithPagination<Report>;
 	export let keyword: string;
 	export let currentPage: number;
+	export let perPage: number;
+	export let sort: string;
+	export let filter: Record<string, string | number | boolean> = {};
 
 	let tableColumns: TableColumn[] = [
-		{
-			type: 'selection'
-		},
 		{
 			prop: 'created_at',
 			label: 'Ngày',
@@ -98,15 +109,19 @@ import { formatNewDate } from '$lib/helper/datetime';
 	const flatpickrOptionsRange = {
 		mode: 'range',
 		enableTime: true,
-		onChange: (selectedDates: Date, dateStr: string, instance: []) => {
+		onChange: async (selectedDates: Date, dateStr: string, instance: []) => {
 			let keyConnect = ' to ';
 			console.log(dateStr);
 
 			if (dateStr.includes(keyConnect)) {
 				let listDateStr = dateStr.split(' to ');
-				let fromDate = listDateStr[0];
-				let toDate = listDateStr[1];
-				getFilterDateData(fromDate, toDate);
+				if (listDateStr.length > 1) {
+					let fromDate = listDateStr[0];
+					let toDate = listDateStr[1];
+					filter.from_date = fromDate;
+					filter.to_date = toDate;
+					await getData();
+				}
 			}
 		}
 	};
@@ -118,26 +133,30 @@ import { formatNewDate } from '$lib/helper/datetime';
 
 	async function onSearch(event: CustomEvent<string>) {
 		keyword = event.detail;
+		filter.name = keyword;
 		await getData();
 	}
 
 	async function getData() {
 		window.openLoading();
 		reportDatas = await getListReportsService({
-			keyword,
-			page: currentPage
+			filter,
+			page: currentPage,
+			perPage,
+			sort
 		});
 		window.closeLoading();
 	}
 
-	async function getFilterDateData(from_date: string, to_date: string) {
-		window.openLoading();
-		reportDatas = await getListFilterDateReportService(from_date, to_date);
-		window.closeLoading();
+	async function onChangePerPage(event: CustomEvent<number>) {
+		perPage = event.detail;
+		await getData();
 	}
 
-  console.log(formatNewDate("2022-06-04T10:11:36.000000Z"));
-  
+	async function onSort(event: CustomEvent<string>) {
+		sort = event.detail;
+		await getData();
+	}
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -165,8 +184,12 @@ import { formatNewDate } from '$lib/helper/datetime';
 		{tableColumns}
 		{keyword}
 		{filterTime}
+		{sort}
+		{perPage}
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
+		on:changePerPage={onChangePerPage}
+		on:sorting={onSort}
 		styleFilter="display: -webkit-inline-box;"
 	>
 		<div slot="filterRadio" class="mr-5 filter-radio">
@@ -205,8 +228,8 @@ import { formatNewDate } from '$lib/helper/datetime';
 				{row.agent ? `Đại lý cấp ${row.agent.level}` : ''}
 			{:else if cell.value == null}
 				Không có thông tin
-      {:else if cell.key === 'created_at'}
-        {row.created_at ? formatNewDate(row.created_at) : ''}
+			{:else if cell.key === 'created_at'}
+				{row.created_at ? formatNewDate(row.created_at) : ''}
 			{:else}
 				{cell.value}
 			{/if}
