@@ -63,7 +63,7 @@
 				formDataInput.append(key, formData[key]);
 			}
 			if ($authStore?.user_detail) {
-				res = await pputWithFile(`user-detail/${$authStore?.id}`, formDataInput);
+				res = await pputWithFile(`user-detail/${$authStore?.user_detail.id}`, formDataInput);
 			} else {
 				res = await ppostWithFile(`user-detail`, formDataInput);
 			}
