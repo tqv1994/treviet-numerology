@@ -34,8 +34,13 @@ export function getAge(user?: User): string {
 
 export function getAvatar(user?: User): string | null {
 	if (user) {
+		let backendDomain = backendUrl.replace("https://","");
+		backendDomain = backendUrl.replace("http://","");
 		if (user.user_detail?.avatar_url) {
 			let avatar = user.user_detail?.avatar_url;
+			if(avatar.includes(backendDomain)){
+				return avatar;
+			}
 			if (avatar.includes('/uploads/') === false) {
 				avatar = `${backendUrl}/uploads/${user.user_detail?.avatar_url}`;
 			} else {
