@@ -8,7 +8,8 @@
 		let purchaseDatas: DataWithPagination<Purchase> | undefined;
 		let purchaseByIdDatas: DataWithPagination<Purchase> | undefined;
 		let treeViews: AgentTreeView[];
-		let packages: [];
+		let agentsLevel1: [];
+
 		const resPurchases = await fetch(
 			`/p/purchases/filter?${objectToQueryString({ keyword, page: currentPage, sort, perPage })}`
 		);
@@ -16,6 +17,7 @@
 			`/p/purchases/filter?${objectToQueryString({ keyword, page: currentPage, create_user_id: userId, sort , perPage })}`
 		);;
 		const resTree = await fetch(`/p/tree-view/${session.user.id}`);
+		const resAgents = await fetch(`/p/agents/filter?filter[level]=1`);
 
 		if (resPurchases.ok) {
 			const data = await resPurchases.json();
@@ -41,6 +43,14 @@
 			console.error(err);
 		}
 
+		if (resAgents.ok) {
+			const data = await resAgents.json();
+			agentsLevel1 = data.results.data;
+		} else {
+			const err = await resAgents.json();
+			console.error(err);
+		}
+
 		return {
 			props: {
 				keyword,
@@ -48,7 +58,8 @@
 				purchaseDatas,
 				purchaseByIdDatas,
 				treeViews,
-				userId
+				userId,
+				agentsLevel1
 			}
 		};
 	};
@@ -75,6 +86,7 @@
 	import { packagesStore } from '$lib/stores/package';
 	import { getUserByUserName } from '$lib/services/auth.service';
 	import { authStore } from '$lib/stores/auth';
+	import CreateTranfer from './components/tabs/createTranfer.svelte';
 
 	export let purchaseDatas: DataWithPagination<Purchase>;
 	export let purchaseByIdDatas: DataWithPagination<Purchase>;
@@ -82,11 +94,11 @@
 	export let keyword: string;
 	export let currentPage: number;
 	export let userId: number;
-	export let agentName: string;
-
-	console.log($packagesStore);
-	
-
+	export let agentsLevel1: [];
+		console.log(agentsLevel1);
+		
+	let packages = $packagesStore;
+	let listColor = convertListColor(packages);
 	let formData: PurchaseFormData;
 	let tabs: Tab[] = [
 		{
@@ -108,6 +120,10 @@
 
 	reset();
 
+	function convertListColor(packages) {
+		return packages.map(item => item.color).reverse();
+	}
+
 	function reset() {
 		formData = {
 			agent_id: "",
@@ -116,53 +132,53 @@
 		};
 	}
 
-	async function onSubmit(event: CustomEvent<object>) {
-		// event.preventDefault();
-		const user = $authStore
-		if (user?.google2fa_secret === null) {
-			window.notice({
-				text: 'Bạn chưa tạo mã 2FA',
-				type: 'danger'
-			});
-		} else {
-			window.openLoading();
-			let finalFormData = {
-				...formData,
-				purchase_date: formatDate(new Date()),
-				amount: 1
-			}
+	// async function onSubmit(event: CustomEvent<object>) {
+	// 	// event.preventDefault();
+	// 	const user = $authStore
+	// 	if (user?.google2fa_secret === null) {
+	// 		window.notice({
+	// 			text: 'Bạn chưa tạo mã 2FA',
+	// 			type: 'danger'
+	// 		});
+	// 	} else {
+	// 		window.openLoading();
+	// 		let finalFormData = {
+	// 			...formData,
+	// 			purchase_date: formatDate(new Date()),
+	// 			amount: 1
+	// 		}
 			
-			try {
-				await createPurchaseService(finalFormData);
-				window.notice({
-					text: 'Xuất MAP thành công',
-					type: 'success'
-				});
-			} catch (err) {
-				window.notice({
-					text: err,
-					type: 'danger'
-				});
-			}
-			window.closeLoading();
-		}
-	}
+	// 		try {
+	// 			await createPurchaseService(finalFormData);
+	// 			window.notice({
+	// 				text: 'Xuất MAP thành công',
+	// 				type: 'success'
+	// 			});
+	// 		} catch (err) {
+	// 			window.notice({
+	// 				text: err,
+	// 				type: 'danger'
+	// 			});
+	// 		}
+	// 		window.closeLoading();
+	// 	}
+	// }
 
-	async function searchUserName(event: CustomEvent<object>) {
-		agentName = "";
-		event.preventDefault()
-		let nameUserSearch = event.target.value;
-		let user = await getUserByUserName(nameUserSearch);
-		if (!user) {
-			window.notice({
-				text: 'Không tìm thấy username',
-				type: 'danger'
-			});
-		}
-		let agent = await getAgentsByUserId(user.id);
-		formData.agent_id = agent.id;
-		agentName = agent.agentname;		
-	}
+	// async function searchUserName(event: CustomEvent<object>) {
+	// 	agentName = "";
+	// 	event.preventDefault()
+	// 	let nameUserSearch = event.target.value;
+	// 	let user = await getUserByUserName(nameUserSearch);
+	// 	if (!user) {
+	// 		window.notice({
+	// 			text: 'Không tìm thấy username',
+	// 			type: 'danger'
+	// 		});
+	// 	}
+	// 	let agent = await getAgentsByUserId(user.id);
+	// 	formData.agent_id = agent.id;
+	// 	agentName = agent.agentname;		
+	// }
 
 	
 </script>
@@ -182,7 +198,6 @@
 				<!-- Card header -->
 				<h3 slot="header" class="mb-0">Chuyển map cho đại lý</h3>
 				<!-- Card body -->
-				<form >
 					<!-- Input groups with icon -->
 					<div class="row">
 						<div class="col-12 mb-5">
@@ -193,90 +208,13 @@
 									<span class=" badge-pill badge-success badge ml-4">Close All</span>
 									<span class=" badge-pill badge-success badge">Open All</span>
 								</div>
-								<Folder expanded={true} agentTreeViews={treeViews} ref_code={null} />
-							</div>
-						</div>
-						<div class="col-lg-6">
-							<div class="row">
-								<div class="col-lg-4 ">
-									<strong>Username </strong>
-								</div>
-								<div class="col-lg-8">
-									<div class="">
-										<BaseInput>
-											<input 
-												class="form-control" 
-												placeholder="Nhập username" 
-												on:change="{event => searchUserName(event)}"
-											/>
-										</BaseInput>
-									</div>
-								</div>
-							</div>
-
-							<div class="row">
-								<div class="col-lg-4 ">
-									<strong> Họ và tên đại lý </strong>
-								</div>
-								<div class="col-lg-8">
-									<div class="">
-										<BaseInput>
-											<!-- <select class="form-control" bind:value={formData.agent_id}>
-												<option value="">-- Chọn --</option>
-												{#each agents || [] as agent}
-													<option value={agent.id}>{agent.agentname}</option>
-												{/each}	
-											</select> -->
-											<input 
-												class="form-control" 
-												placeholder="Họ và tên đại lý" 
-												bind:value={agentName}
-												disabled
-											/>
-										</BaseInput>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="col-lg-6">
-							<div class="row">
-								<div class="col-lg-4 ">
-									<strong> Gói đại lý </strong>
-								</div>
-								<div class="col-lg-8">
-									<div class="">
-										<BaseInput>
-											<select class="form-control" id="exampleFormControlSelect1" bind:value={formData.packages_id}>
-												<option value="">-- Chọn --</option>
-												{#each $packagesStore || [] as item}
-													<option value={item.id}>{item.package_name}</option>
-												{/each}
-											</select>
-										</BaseInput>
-									</div>
-								</div>
-							</div>
-
-							<div class="row">
-								<div class="col-lg-4 ">
-									<strong> 2FA </strong>
-								</div>
-								<div class="col-lg-8">
-									<div class="">
-										<BaseInput placeholder="Nhập code 2FA" bind:value={formData.one_time_password} />
-									</div>
-								</div>
+								<Folder expanded={true} agentTreeViews={treeViews} ref_code={null} colors={listColor}/>
 							</div>
 						</div>
 					</div>
-					<div>
-						<div class="text-left" style="float: left" />
-						<div class="text-right" style="float: right">
-							<button class="btn btn-success" on:click={event => onSubmit(event)}>Xuất map</button>
-						</div>
-					</div>
-				</form>
+
+					<CreateTranfer {agentsLevel1}/>
+
 			</Card>
 			<!-- Input groups -->
 		</div>

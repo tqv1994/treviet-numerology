@@ -68,6 +68,8 @@
 	import { objectToQueryString } from '$lib/utils/string';
 	import Folder from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
 	import Flatpickr from 'svelte-flatpickr';
+	import { packagesStore } from '$lib/stores/package';
+	import { apiUrl } from '$lib/env';
 
 	export let agentDatas: DataWithPagination<Agent>;
 	export let treeViews: AgentTreeView[];
@@ -78,7 +80,10 @@
 	export let filter: Record<string, string | number | boolean> = {};
 
 	let filterTime = true;
-
+	let packages = $packagesStore;
+	let listColor = convertListColor(packages);
+	let excelChecked = 'all';
+	
 	let tableColumns: TableColumn[] = [
 		{
 			type: 'selection'
@@ -201,6 +206,27 @@
 		sort = event.detail;
 		await getData();
 	}
+
+	function convertListColor(packages) {
+		return packages.map(item => item.color).reverse();
+	}
+
+	function onExportExcel() {
+		let link = '';
+		if (excelChecked === 'all') {
+			link = `${apiUrl}/agents/export-excel`
+		} else {
+			link = `${apiUrl}/agents/export-excel?from_date=${filter.from_date}&to_date=${filter.to_date}`;
+		}
+		console.log(excelChecked, filter);
+		filter.from_date = '';
+		filter.to_date = '';
+		redirect(link);
+	}
+
+	function onChangeRadio(event) {
+		excelChecked = event.currentTarget.value;
+	}
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -231,7 +257,7 @@
 				</h3>
 				<!-- Card body -->
 				<div class="mt-3" style="color:mediumvioletred">
-					<Folder expanded={true} agentTreeViews={treeViews} ref_code={null} />
+					<Folder expanded={false} agentTreeViews={treeViews} ref_code={null} colors={listColor}/>
 				</div>
 			</Card>
 			<!-- Input groups -->
@@ -252,16 +278,31 @@
 		on:search={onSearch}
 		on:changePerPage={onChangePerPage}
 		on:sorting={onSort}
+		on:create={onExportExcel}
 		styleFilter="display: -webkit-inline-box;"
 	>
 		<div slot="filterRadio" class="mr-5 filter-radio">
 			<label class="">
-				<input type="radio" checked name="radio" class="custom-radio" />
+				<input 
+					type="radio" 
+					name="radio" 
+					class="custom-radio" 
+					checked={excelChecked==='all'} 
+					on:change={onChangeRadio} 
+					value="all_agent"
+				/>
 				<span class="checkmark" />
 				Toàn bộ đại lý
 			</label>
 			<label class="ml-3">
-				<input type="radio" name="radio" class="custom-radio" />
+				<input 
+					type="radio" 
+					name="radio" 
+					class="custom-radio" 
+					checked={excelChecked==='time'} 
+					on:change={onChangeRadio} 
+					value="time"
+				/>
 				<span class="checkmark" />
 				Theo thời gian
 			</label>

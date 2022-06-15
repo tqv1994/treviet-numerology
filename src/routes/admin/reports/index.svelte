@@ -51,8 +51,8 @@
 	import type { Load } from '@sveltejs/kit';
 	import Flatpickr from 'svelte-flatpickr';
 	import { formatNewDate } from '$lib/helper/datetime';
-
-	let filterTime = true;
+	import { apiUrl } from '$lib/env';
+	import { redirect } from '$lib/components/redirect.svelte';
 
 	export let name = 'Quản trị';
 	export let reportDatas: DataWithPagination<Report>;
@@ -61,7 +61,9 @@
 	export let perPage: number;
 	export let sort: string;
 	export let filter: Record<string, string | number | boolean> = {};
-
+		
+	let filterTime = true;
+	let excelChecked = 'all';
 	let tableColumns: TableColumn[] = [
 		{
 			prop: 'created_at',
@@ -98,6 +100,11 @@
 			label: 'Cây',
 			minWidth: 100,
 			sortable: true
+		},
+		{
+			prop: 'report_link',
+			label: 'Report link',
+			minWidth: 120,
 		}
 	];
 
@@ -157,6 +164,23 @@
 		sort = event.detail;
 		await getData();
 	}
+
+	function onExportExcel() {
+		let link = '';
+		if (excelChecked === 'all') {
+			link = `${apiUrl}/reports/export-excel`
+		} else {
+			link = `${apiUrl}/reports/export-excel?from_date=${filter.from_date}&to_date=${filter.to_date}`;
+		}
+		console.log(excelChecked, filter);
+		filter.from_date = '';
+		filter.to_date = '';
+		redirect(link);
+	}
+
+	function onChangeRadio(event) {
+		excelChecked = event.currentTarget.value;
+	}
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -190,16 +214,31 @@
 		on:search={onSearch}
 		on:changePerPage={onChangePerPage}
 		on:sorting={onSort}
+		on:create={onExportExcel}
 		styleFilter="display: -webkit-inline-box;"
 	>
 		<div slot="filterRadio" class="mr-5 filter-radio">
 			<label class="">
-				<input type="radio" checked name="radio" class="custom-radio" />
+				<input 
+					type="radio" 
+					name="radio" 
+					class="custom-radio" 
+					checked={excelChecked==='all'} 
+					on:change={onChangeRadio} 
+					value="all_agent"
+				/>
 				<span class="checkmark" />
 				Toàn bộ đại lý
 			</label>
 			<label class="ml-3">
-				<input type="radio" name="radio" class="custom-radio" />
+				<input 
+					type="radio" 
+					name="radio" 
+					class="custom-radio" 
+					checked={excelChecked==='time'} 
+					on:change={onChangeRadio} 
+					value="time"
+				/>
 				<span class="checkmark" />
 				Theo thời gian
 			</label>
@@ -230,6 +269,12 @@
 				Không có thông tin
 			{:else if cell.key === 'created_at'}
 				{row.created_at ? formatNewDate(row.created_at) : ''}
+			{:else if cell.key === 'report_link'}
+				{#if cell.value !== null} 
+					<a href={`${apiUrl}${cell.value}`}>Link PDF</a>
+				{:else}
+					Đang xử lý
+				{/if}
 			{:else}
 				{cell.value}
 			{/if}

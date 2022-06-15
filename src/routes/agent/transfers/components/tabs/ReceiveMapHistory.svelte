@@ -9,17 +9,22 @@
 	import Table from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import type { DataWithPagination } from '$lib/stores/type';
 	import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
-  import type { Purchase } from '$lib/stores/purchase';
+  	import type { Purchase } from '$lib/stores/purchase';
+import { apiUrl } from '$lib/env';
+import { redirect } from '$lib/components/redirect.svelte';
+import Flatpickr from 'svelte-flatpickr';
 
 	export let receiveDatas: DataWithPagination<Purchase>;
-  export let keyword: string;
+  	export let keyword: string;
 	export let currentPage: number;
 	export let props: any;
+	export let filter: Record<string, string | number | boolean> = {};
 	
 	let sort: string = '-id';
 	let perPage: number = 10;
 	let agenId: number = props.myAgent.id;
-
+	let excelChecked = 'all';
+	
 	onMount(async () => {
 		await getData();
 	});
@@ -66,9 +71,38 @@
 		}
 	];
 
+	let dates = {
+		simple: new Date(),
+		range: '2022-05-22 12:00 to 2022-06-21 12:00'
+	};
+
+	const flatpickrOptionsRange = {
+		mode: 'range',
+		enableTime: true,
+		onChange: async (selectedDates: Date, dateStr: string, instance: []) => {
+			let keyConnect = ' to ';
+			console.log(dateStr);
+
+			if (dateStr.includes(keyConnect)) {
+				let listDateStr = dateStr.split(' to ');
+				if (listDateStr.length > 1) {
+					let fromDate = listDateStr[0];
+					let toDate = listDateStr[1];
+					filter.from_date = fromDate;
+					filter.to_date = toDate;
+					await getData();
+				}
+			}
+		}
+	};
+
 	export async function getData() {
+		let url = `purchases/filter?filter[agent_id]=${agenId}`
+		if (filter.from_date && filter.to_date) {
+			url += `&filter[from_date]=${filter.from_date}&filter[to_date]=${filter.to_date}`
+		}
 		const res = await pget(
-			`purchases/filter?filter[agent_id]=${agenId}&${objectToQueryString({
+			`${url}&${objectToQueryString({
 				sort,
 				perPage
 			})}`
@@ -77,9 +111,9 @@
 			const data = await res.json();
 			receiveDatas = data.results;
 			console.log(receiveDatas);
-			
 		}
 	}
+
 	async function onChangePerPage(event: CustomEvent<number>) {
 		perPage = event.detail;
 		await getData();
@@ -99,6 +133,19 @@
 		currentPage = event.detail;
 		await getData();
 	}
+
+	function onExportExcel() {
+		let link = '';
+		if (excelChecked === 'all') {
+			link = `${apiUrl}/transfers/export-excel`
+		} else {
+			link = `${apiUrl}/transfers/export-excel?agent_id=${agenId}from_date=${filter.from_date}&to_date=${filter.to_date}`;
+		}
+		console.log(excelChecked, filter);
+		filter.from_date = '';
+		filter.to_date = '';
+		redirect(link);
+	}
 </script>
 
 <div class="content mt--6" transition:fade={{ duration: 250 }}>
@@ -112,34 +159,24 @@
 		on:changePerPage={onChangePerPage}
 		on:search={onSearch}
 		on:sort={onSort}
+		on:create={onExportExcel}
 	>
-		<div slot="label-search">
+		<div slot="label-search">	
 			<p class="label-search mt-2 ml-4 mr-4">Search:</p>
 		</div>
 		<div slot="filter-form-content" class="filter-form-content">
 			<div class="row form-group">
 				<p class="search-datetime mt-2">Từ:</p>
-				<div class="col-md-9">
-					<BaseInput
-						type="datetime-local"
-						value="2018-11-23T10:30:00"
-						id="example-datetime-local-input"
-						inputClasses="form-control datetime-input"
-						styleInput="width:200px"
-					/>
-				</div>
-			</div>
-
-			<div class="row form-group" style="margin-left: 25px">
-				<p class="search-datetime mt-2">Đến:</p>
-				<div class="col-md-9">
-					<BaseInput
-						type="datetime-local"
-						value="2018-11-23T10:30:00"
-						id="example-datetime-local-input"
-						inputClasses="form-control datetime-input"
-						styleInput="width:200px"
-					/>
+				<div class="col-md-9 width-date-picker">
+					<BaseInput>
+						<Flatpickr
+							options={flatpickrOptionsRange}
+							class="form-control datepicker bg-white"
+							defaultDate={dates.range}
+							placeholder={dates.range}
+							dateFormat="Y-m-d"
+						/>
+					</BaseInput>
 				</div>
 			</div>
 		</div>
@@ -172,5 +209,9 @@
 	.badge-success {
 		background-color: #1aae6f;
 		color: white;
+	}
+
+	.width-date-picker {
+		width: 384px;
 	}
 </style>
