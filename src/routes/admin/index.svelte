@@ -1,3 +1,38 @@
+<script lang="ts" context="module">
+	export const load: Load = async ({ fetch, session, url }) => {
+		let packageDatas: DataTableAgenctLevel[] | undefined;
+		const keyword = url.searchParams.get('keyword') || '';
+		const currentPage = url.searchParams.get('page') || 1;
+		let agentDatas: DataTableAgentList[] | undefined;
+		const res = await fetch(`/p/packages`);
+		const resAgent = await fetch(`/p/agents?${objectToQueryString({ keyword, page: currentPage,sort:'id' })}`);
+		
+		if (res.ok) {
+			const data = await res.json();
+			packageDatas = data.results.data;
+		} else {
+			const err = await res.json();
+			console.error(err);
+		}
+
+		if (resAgent.ok) {
+			const data = await resAgent.json();
+			agentDatas = data.results.data;
+		} else {
+			const err = await resAgent.json();
+			console.error(err);
+		}
+
+		return {
+			props: {
+				packageDatas,
+				agentDatas
+			}
+		};
+	};
+
+	
+</script>
 <script lang="ts">
     import { fade } from "svelte/transition";
     // Components
@@ -12,277 +47,17 @@
 	import type { DataTableAgentList } from '$lib/components/ABS/Agent/AgentList.svelte';
 	import AgentLevelTable from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
+	
 	import { appName } from '$lib/env';
 	import type { DataWithPagination } from "$lib/stores/type";
 	import type { Load } from "@sveltejs/kit";
 	import { objectToQueryString } from "$lib/utils/string";
 	import { packagesStore, type Package } from "$lib/stores/package";
+	import type { Agent, AgentTreeView } from "$lib/stores/agent";
+
+	export let agentDatas: DataTableAgentList[];
+	export let packageDatas: DataTableAgenctLevel[];
 	
-	onMount(function () {
-		// window.fusionCharts = FusionCharts;
-		// window.charts = Charts;
-		// window.fusionTheme = FusionTheme;
-		// window.candyTheme = CandyTheme;
-		// fcRoot(window.fusionCharts, window.charts, window.fusionTheme, window.candyTheme);
-		let topmenu = document.getElementsByTagName('nav').item(0);
-		topmenu.classList.add('navbar-dark');
-		topmenu.classList.remove('navbar-light');
-		let search = document.getElementsByTagName('form').item(0);
-		search.classList.remove('navbar-search-dark');
-		search.classList.add('navbar-search-light');
-		window.addEventListener('resize', function () {
-			lineChartConfig = {
-				type: 'spline',
-				width: '100%',
-				height: '370',
-				renderAt: 'chart-container',
-				dataSource: line
-			};
-			barChartConfig = {
-				type: 'column2d',
-				width: '100%',
-				height: '370',
-				renderAt: 'chart-container',
-				dataSource: bigLineChart.barData
-			};
-		});
-	});
-
-	let line = '';
-
-	let bigLineChart = {
-		activeIndex: 0,
-		monthdata: {
-			chart: {
-				showValues: '0',
-				theme: 'candy'
-			},
-			colorrange: {
-				minvalue: '0',
-				code: '#5E72E4',
-				gradient: '1',
-				color: [
-					{
-						minvalue: '0',
-						maxvalue: '70',
-						color: '#5E72E4'
-					}
-				]
-			},
-			data: [
-				{
-					label: 'May',
-					value: '0'
-				},
-				{
-					label: 'Jun',
-					value: '20'
-				},
-				{
-					label: 'Jul',
-					value: '10'
-				},
-				{
-					label: 'Aug',
-					value: '30'
-				},
-				{
-					label: 'Sep',
-					value: '15'
-				},
-				{
-					label: 'Oct',
-					value: '40'
-				},
-				{
-					label: 'Nov',
-					value: '20'
-				},
-				{
-					label: 'Dec',
-					value: '60'
-				}
-			]
-		},
-		weekdata: {
-			chart: {
-				showValues: '0',
-				theme: 'candy'
-			},
-			colorrange: {
-				minvalue: '0',
-				code: '#5E72E4',
-				gradient: '1',
-				color: [
-					{
-						minvalue: '0',
-						maxvalue: '70',
-						color: '#5E72E4'
-					}
-				]
-			},
-			data: [
-				{
-					label: 'May',
-					value: '0'
-				},
-				{
-					label: 'Jun',
-					value: '20'
-				},
-				{
-					label: 'Jul',
-					value: '5'
-				},
-				{
-					label: 'Aug',
-					value: '25'
-				},
-				{
-					label: 'Sep',
-					value: '10'
-				},
-				{
-					label: 'Oct',
-					value: '30'
-				},
-				{
-					label: 'Nov',
-					value: '15'
-				},
-				{
-					label: 'Dec',
-					value: '40'
-				}
-			]
-		},
-		barData: {
-			chart: {
-				theme: 'fusion'
-			},
-			data: [
-				{
-					label: 'Jul',
-					value: '25',
-					color: '#FB6340'
-				},
-				{
-					label: 'Aug',
-					value: '20',
-					color: '#FB6340'
-				},
-				{
-					label: 'Sep',
-					value: '30',
-					color: '#FB6340'
-				},
-				{
-					label: 'Oct',
-					value: '22',
-					color: '#FB6340'
-				},
-				{
-					label: 'Nov',
-					value: '17',
-					color: '#FB6340'
-				},
-				{
-					label: 'Dec',
-					value: '19',
-					color: '#FB6340'
-				}
-			]
-		}
-	};
-
-	line = bigLineChart.monthdata;
-
-	let lineChartConfig = {
-		type: 'spline',
-		width: '100%',
-		height: '370',
-		renderAt: 'chart-container',
-		dataSource: line
-	};
-
-	let barChartConfig = {
-		type: 'column2d',
-		width: '100%',
-		height: '370',
-		renderAt: 'chart-container',
-		dataSource: bigLineChart.barData
-	};
-
-	const updateChart = (index) => {
-		if (index === 0) {
-			line = bigLineChart.monthdata;
-			bigLineChart.activeIndex = 1;
-		} else {
-			line = bigLineChart.weekdata;
-			bigLineChart.activeIndex = 0;
-		}
-
-		lineChartConfig = {
-			type: 'spline',
-			width: '1000',
-			height: '370',
-			renderAt: 'chart-container',
-			dataSource: line
-		};
-	};
-
-	let agentList: DataTableAgentList[] = [
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '4,569',
-			unique: '340',
-			bounceRate: '46,53%',
-			bounceRateDirection: 'up',
-			progress: 60,
-			progressType: 'gradient-danger'
-		},
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '3,985',
-			unique: '319',
-			bounceRate: '46,53%',
-			bounceRateDirection: 'down',
-			progress: 30,
-			progressType: 'gradient-primary'
-		},
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '3,513',
-			unique: '294',
-			bounceRate: '36,49%',
-			bounceRateDirection: 'down',
-			progress: 80,
-			progressType: 'gradient-info'
-		},
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '2,050',
-			unique: '147',
-			bounceRate: '50,87%',
-			bounceRateDirection: 'up',
-			progress: 40,
-			progressType: 'gradient-danger'
-		},
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '1,795',
-			unique: '190',
-			bounceRate: '46,53%',
-			bounceRateDirection: 'down',
-			progress: 70,
-			progressType: 'gradient-info'
-		}
-	];
   </script>
   
   <div transition:fade={{ duration: 250 }}>
@@ -361,10 +136,10 @@
 		<!--Tables-->
 		<div class="row">
 			<div class="col-xl-8">
-				<AgentList tableData={agentList} />
+				<AgentList tableData={agentDatas} />
 			</div>
 			<div class="col-xl-4">
-				<AgentLevelTable tableData={$packagesStore} />
+				<AgentLevelTable tableData={packageDatas} />
 			</div>
 		</div>
 	</div>

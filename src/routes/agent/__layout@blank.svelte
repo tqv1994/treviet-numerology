@@ -120,16 +120,6 @@
 						isActive: checkMenuActive('/agent/transaction', pathname)
 					}}
 				/>
-
-				<SideBarItem
-					link={{
-						name: 'Báo cáo',
-						icon: 'ni ni-single-copy-04 ',
-						path: '/agent/reports',
-						isActive: checkMenuActive('/agent/reports', pathname, true)
-					}}
-				/>
-
 				<SideBarItem
 					link={{
 						name: 'Cây hệ thống',

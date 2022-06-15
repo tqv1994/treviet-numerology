@@ -1,7 +1,12 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, url }) => {
 		let packageDatas: DataTableAgenctLevel[] | undefined;
-		const res = await fetch(`/p/packages/filter?perPage=999`);
+		const keyword = url.searchParams.get('keyword') || '';
+		const currentPage = url.searchParams.get('page') || 1;
+		let agentDatas: DataTableAgentList[] | undefined;
+		const res = await fetch(`/p/packages`);
+		const resAgent = await fetch(`/p/agents?${objectToQueryString({ keyword, page: currentPage,sort:'id' })}`);
+		
 		if (res.ok) {
 			const data = await res.json();
 			packageDatas = data.results.data;
@@ -10,38 +15,50 @@
 			console.error(err);
 		}
 
+		if (resAgent.ok) {
+			const data = await resAgent.json();
+			agentDatas = data.results.data;
+		} else {
+			const err = await resAgent.json();
+			console.error(err);
+		}
+
 		return {
 			props: {
-				packageDatas
+				packageDatas,
+				agentDatas
 			}
 		};
 	};
+
+	
 </script>
+
 <script lang="ts">
-	import { fade } from 'svelte/transition';
-
-	// Components
-	import RouteBreadCrumb from '$lib/components/Breadcrumb/RouteBreadcrumb.svelte';
-	import StatsCard from '$lib/components/Cards/StatsCard.svelte';
-	import Card from '$lib/components/Cards/Card.svelte';
-	import BaseHeader from '$lib/components/BaseHeader.svelte';
-
-	// charts
-	// import FusionCharts from 'fusioncharts';
-	// import Charts from 'fusioncharts/fusioncharts.charts';
-	// import FusionTheme from 'fusioncharts/themes/fusioncharts.theme.fusion';
-	// import CandyTheme from 'fusioncharts/themes/fusioncharts.theme.candy';
-	// import SvelteFC, { fcRoot } from 'svelte-fusioncharts';
-	export let name = 'Trang chủ';
-	import { onMount } from 'svelte';
+    import { fade } from "svelte/transition";
+    // Components
+    import RouteBreadCrumb from "$lib/components/Breadcrumb/RouteBreadcrumb.svelte";
+    import StatsCard from "$lib/components/Cards/StatsCard.svelte";
+    import BaseHeader from '$lib/components/BaseHeader.svelte';
+    import Card from '$lib/components/Cards/Card.svelte';
+    // Tables
+    export let name = "Trang chủ";
+    import { onMount } from 'svelte';
 	import AgentList from '$lib/components/ABS/Agent/AgentList.svelte';
 	import type { DataTableAgentList } from '$lib/components/ABS/Agent/AgentList.svelte';
 	import AgentLevelTable from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import { appName } from '$lib/env';
-	import type { Load } from '@sveltejs/kit';
-	import { packagesStore } from '$lib/stores/package';
+	import type { DataWithPagination } from "$lib/stores/type";
+	import type { Load } from "@sveltejs/kit";
+	import { objectToQueryString } from "$lib/utils/string";
+	import type { Package } from "$lib/stores/package";
+	import type { Agent, AgentTreeView } from "$lib/stores/agent";
+	
 
+	export let packageDatas: DataTableAgenctLevel[];
+	export let agentDatas: DataTableAgentList[];
+	
 	onMount(function () {
 		// window.fusionCharts = FusionCharts;
 		// window.charts = Charts;
@@ -255,147 +272,69 @@
 		};
 	};
 
-	let agentList: DataTableAgentList[] = [
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '4,569',
-			unique: '340',
-			bounceRate: '46,53%',
-			bounceRateDirection: 'up',
-			progress: 60,
-			progressType: 'gradient-danger'
-		},
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '3,985',
-			unique: '319',
-			bounceRate: '46,53%',
-			bounceRateDirection: 'down',
-			progress: 30,
-			progressType: 'gradient-primary'
-		},
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '3,513',
-			unique: '294',
-			bounceRate: '36,49%',
-			bounceRateDirection: 'down',
-			progress: 80,
-			progressType: 'gradient-info'
-		},
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '2,050',
-			unique: '147',
-			bounceRate: '50,87%',
-			bounceRateDirection: 'up',
-			progress: 40,
-			progressType: 'gradient-danger'
-		},
-		{
-			name: 'Micheal Ballack',
-			image: '../img/theme/team-1.jpg',
-			sales: '1,795',
-			unique: '190',
-			bounceRate: '46,53%',
-			bounceRateDirection: 'down',
-			progress: 70,
-			progressType: 'gradient-info'
-		}
-	];
-</script>
+  </script>
+  
+  <div transition:fade={{ duration: 250 }}>
+    <BaseHeader className="pb-6">
+      <div class="row align-items-center py-4">
+        <div class="col-lg-6 col-7">
+          <h6 class="h2 text-black d-inline-block mb-0">Đại lý</h6>
+          <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+            <RouteBreadCrumb {name} />
+          </nav>
+        </div>
+      </div>
+      <!-- Card stats -->
+      <div class="row">
+        <div class="col-xl-3 col-md-6">
+          <StatsCard
+            title="Doanh số cá nhân tháng"
+            type="gradient-info"
+            subTitle="160"
+            icon="ni ni-chart-bar-32"
+            bodyClasses="bg-revenue">
+            <div slot="footer">
+              <span class="text-dank mr-2">
+                Chi tiết
+              </span>
+            </div>
+          </StatsCard>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <StatsCard
+            title="Doanh số đại lý tháng"
+            type="gradient-info"
+            subTitle="50"
+            icon="ni ni-chart-bar-32"
+            bodyClasses="bg-revenue-agent">
+            <div slot="footer">
+              <span class="text-dank mr-2">
+                Chi tiết
+              </span>
+            </div>
+          </StatsCard>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <StatsCard
+            title="Tổng số đại lý trực thuộc"
+            type="gradient-info"
+            subTitle="2000"
+            icon="ni ni-chart-pie-35"
+            bodyClasses="bg-sum-agent">
+            <div slot="footer">
+              <span class="text-dank mr-2">
+                Chi tiết
+              </span>
+            </div>
+          </StatsCard>
+        </div>
+      </div>
+    </BaseHeader>
 
-<svelte:head>
-	<title>{appName || ''} - Trang chủ</title>
-</svelte:head>
-<div transition:fade={{ duration: 250 }}>
-	<BaseHeader className="pb-6">
-		<div class="row align-items-center py-4">
-			<div class="col-lg-6 col-7">
-				<h6 class="h2 text-black d-inline-block mb-0">Đại lý</h6>
-				<nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
-					<RouteBreadCrumb {name} />
-				</nav>
-			</div>
-		</div>
-		<!-- Card stats -->
-		<div class="row">
-			<div class="col-xl-3 col-md-6">
-				<StatsCard
-					title="Cấp độ hiện tại"
-					type="gradient-red"
-					image="../../img/icons/packages/package-1.png"
-					imageClass="ml-6 mb--6"
-					bodyClasses="bg-traffic"
-				>
-					<div slot="footer">
-						<span class="text-dank mr-2"> Ngày tham gia </span>
-						<div>
-							<span class="text-nowrap">14/04/2022</span>
-						</div>
-					</div>
-				</StatsCard>
-			</div>
-			<div class="col-xl-3 col-md-6">
-				<StatsCard
-					title="Doanh số cá nhân tháng"
-					type="gradient-info"
-					subTitle="160"
-					icon="ni ni-chart-bar-32"
-					bodyClasses="bg-revenue"
-				>
-					<div slot="footer">
-						<span class="text-dank mr-2"> Chi tiết </span>
-					</div>
-				</StatsCard>
-			</div>
-			<div class="col-xl-3 col-md-6">
-				<StatsCard
-					title="Doanh số đại lý tháng"
-					type="gradient-info"
-					subTitle="50"
-					icon="ni ni-chart-bar-32"
-					bodyClasses="bg-revenue-agent"
-				>
-					<div slot="footer">
-						<span class="text-dank mr-2"> Chi tiết </span>
-					</div>
-				</StatsCard>
-			</div>
-			<div class="col-xl-3 col-md-6">
-				<StatsCard
-					title="Tổng số đại lý trực thuộc"
-					type="gradient-info"
-					subTitle="2000"
-					icon="ni ni-chart-pie-35"
-					bodyClasses="bg-sum-agent"				>
-					<div slot="footer">
-						<span class="text-dank mr-2"> Chi tiết </span>
-					</div>
-				</StatsCard>
-			</div>
-		</div>
-	</BaseHeader>
-
-	<!--Charts-->
+    <!--Charts-->
 	<div class="container-fluid mt--6">
 		<div class="row">
-			<div class="col-xl-6">
-				<Card headerClasses="bg-transparent" background="true">
-					<div class="row align-items-center" slot="header">
-						<div class="col">
-							<h6 class="text-light text-uppercase ls-1 mb-1">doanh số</h6>
-							<h5 class="h3 text-white mb-0">Đại lý</h5>
-						</div>
-					</div>
-					<!-- <SvelteFC {...lineChartConfig} /> -->
-				</Card>
-			</div>
-			<div class="col-xl-6">
+			<div class="col-xl-12">
 				<Card headerClasses="bg-transparent">
 					<div class="row align-items-center" slot="header">
 						<div class="col">
@@ -411,20 +350,12 @@
 		<!--Tables-->
 		<div class="row">
 			<div class="col-xl-8">
-				<AgentList tableData={agentList} />
+				<AgentList tableData={agentDatas} />
 			</div>
 			<div class="col-xl-4">
-				<AgentLevelTable tableData={$packagesStore} />
+				<AgentLevelTable tableData={packageDatas} />
 			</div>
 		</div>
 	</div>
-</div>
-<style>
-	.background-stats{
-		background-color: red
-	}
-
-	.bg-traffic{
-		background-color: red;
-	}
-</style>
+  </div>
+  

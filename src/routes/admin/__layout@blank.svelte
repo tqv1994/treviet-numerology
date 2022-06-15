@@ -126,7 +126,7 @@
 
 				<SideBarItem
 					link={{
-						name: 'Cáo cáo',
+						name: 'Báo cáo',
 						icon: 'ni ni-collection',
 						path: '/admin/reports',
 						isActive: checkMenuActive('/admin/reports', pathname, true)
@@ -155,14 +155,6 @@
 						icon: 'ni ni-folder-17',
 						path: '/admin/map-publishing',
 						isActive: checkMenuActive('/admin/map-publishing', pathname, true)
-					}}
-				/>
-				<SideBarItem
-					link={{
-						name: 'Tài khoản',
-						icon: 'ni ni-circle-08',
-						path: '/admin/profile',
-						isActive: checkMenuActive('/admin/profile', pathname)
 					}}
 				/>
 				<SideBarItem
