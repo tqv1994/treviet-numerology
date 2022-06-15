@@ -146,7 +146,7 @@
 </script>
 
 <style>
-  .sidebar-menu-item {
+  .sidebar-menu-item.sidebar-menu-item {
     cursor: pointer;
     color: white;
   }
@@ -159,11 +159,8 @@
     height: 0;
     overflow: hidden;
   }
-  .nav-link-text {
-    color: white;
-  }
 
-  .nav-link:hover{
+  .sidebar-menu-item.sidebar-menu-item:hover{
     color:var(--primary);
   }
 
