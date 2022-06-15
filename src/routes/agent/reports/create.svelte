@@ -14,6 +14,8 @@
 	import { redirectAgent } from '$lib/components/redirect.svelte';
 	import * as yup from 'yup';
 	import { getMsgRequired } from '$lib/utils/message';
+	import type { SwalResult } from '$lib/utils/swal';
+	import Swal from 'sweetalert2/dist/sweetalert2.js';
 	let errors: any = {};
 	const schemaValidator = yup.object().shape({
 		name: yup.string().typeError(getMsgRequired('Họ tên')).required(getMsgRequired('Họ tên')),
@@ -62,23 +64,36 @@
 
 	async function onSubmit() {
 		errors = {};
-		window.openLoading();
 		try {
 			await schemaValidator.validate({ ...formData }, { abortEarly: false });
-			const res = await ppost('reports', formData);
-			if (res.ok) {
-				window.notice({
-					text: 'Tạo báo cáo thành công',
-					type: 'success'
-				});
-				reset();
-				redirectAgent('/reports');
-			} else {
-				const error = await res.json();
-				window.notice({
-					text: getErrorMessage(error.errors),
-					type: 'danger'
-				});
+			const result: SwalResult = await Swal.fire({
+				title: `Bạn có chắc chắn muốn tạo báo cáo cho ${formData.name}, ${formData.dob} không?`,
+				text: `Bạn sẽ không thể hoàn nguyên điều này!`,
+				type: 'warning',
+				showCancelButton: true,
+				confirmButtonClass: 'btn btn-success btn-fill',
+				cancelButtonClass: 'btn btn-danger btn-fill',
+				confirmButtonText: 'Vâng, tạo nó!',
+				cancelButtonText: 'Huỷ',
+				buttonsStyling: false
+			});
+			if (result.isConfirmed) {
+				window.openLoading();
+				const res = await ppost('reports', formData);
+				if (res.ok) {
+					window.notice({
+						text: 'Tạo báo cáo thành công',
+						type: 'success'
+					});
+					reset();
+					redirectAgent('/reports');
+				} else {
+					const error = await res.json();
+					window.notice({
+						text: getErrorMessage(error.errors),
+						type: 'danger'
+					});
+				}
 			}
 		} catch (err) {
 			if (err.inner) {

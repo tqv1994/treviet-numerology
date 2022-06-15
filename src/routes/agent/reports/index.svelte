@@ -31,7 +31,7 @@
 	import { fade } from 'svelte/transition';
 	import BaseHeader from '$lib/components/BaseHeader.svelte';
 	import { onMount } from 'svelte';
-	import type { Report } from '$lib/stores/report';
+	import { getReportStatusItems, REPORT_STATUS, type Report } from '$lib/stores/report';
 	import { getListReportsService } from '$lib/services/report.service';
 	import type { DataWithPagination } from '$lib/stores/type';
 	import Table from '$lib/components/ABS/Global/Datatable/Table.svelte';
@@ -42,6 +42,10 @@
 	import { objectToQueryString } from '$lib/utils/string';
 	import Cell from '$lib/components/ABS/Global/Datatable/Cell.svelte';
 	import { formatDate } from '$lib/utils/datetime';
+import Badge from '$lib/components/Badge.svelte';
+import { getImage } from '$lib/utils/image';
+import { pget } from '$lib/utils/fetch';
+import { getErrorMessage } from '$lib/utils/response';
 	export let reportDatas: DataWithPagination<Report>;
 	export let keyword: string;
 	export let currentPage: number;
@@ -80,6 +84,18 @@
 			prop: 'email',
 			label: 'Email',
 			minWidth: 150,
+			sortable: true
+		},
+		{
+			prop: 'status',
+			label: 'Trạng thái',
+			minWidth: 100,
+			sortable: true
+		},
+		{
+			prop: 'action',
+			label: 'Hành động',
+			minWidth: 100,
 			sortable: true
 		}
 	];
@@ -120,6 +136,24 @@
 		perPage = event.detail;
 		await getData();
 	}
+
+	async function createReReport(report: Report) {
+		window.openLoading();
+		const rest = await pget(`reports/re-create/${report.id}`);
+		if(rest.ok){
+			window.notice({
+				text: `Tạo lại báo cáo cho ${report.name} thành công`,
+				type: 'success'
+			});
+		}else{
+			const error = await rest.json();
+			window.notice({
+				text: getErrorMessage(error.errors),
+				type: 'danger'
+			});
+		}
+		window.closeLoading();
+	}
 </script>
 
 <svelte:head>
@@ -159,6 +193,21 @@
 				{row.agent ? row.agent.agentname : ''}
 			{:else if cell.key === 'created_at'}
 				{cell.value ? formatDate(cell.value, 'dd/mm/yyyy') : ''}
+			{:else if cell.key === 'status'}
+				<Badge className="badge-dot mr-4">
+					<i class={`bg-${cell.value === REPORT_STATUS ? 'success' : 'danger'}`} />
+					<span class="status">{getReportStatusItems(cell.value)}</span>
+				</Badge>
+			{:else if cell.key === 'action'}
+				{#if row.report_link}
+					<a href="{getImage(row.report_link)}" class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="top" title="Tải file pdf" data-original-title="Tải file pdf"><i class="ni ni-cloud-download-95"></i></a>
+				{:else}
+					<button disabled class="btn btn-default btn-sm" data-toggle="tooltip"
+					data-placement="top"
+					title="File pdf chưa khả dụng để tải"
+					data-original-title="File pdf chưa khả dụng để tải"><i class="ni ni-cloud-download-95"></i></button>
+				{/if}
+				<button on:click={()=>{createReReport(row)}} class="btn btn-warning btn-sm" data-toggle="tooltip" data-placement="top" title="Tạo lại báo cáo" data-original-title="Tạo lại báo cáo"><i class="ni ni-curved-next"></i></button>
 			{:else}
 				{cell.value}
 			{/if}

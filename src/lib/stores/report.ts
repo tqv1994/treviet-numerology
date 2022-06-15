@@ -31,3 +31,18 @@ export type ReportFormData = {
     nickname?: string;
     initials?: string;
 }
+
+export enum REPORT_STATUS {
+    STATUS_INACTIVE = 0,
+    STATUS_ACTIVE = 1
+};
+
+export const getReportStatusItems = (key?: REPORT_STATUS) => {
+    const items: Record<number, string> = {};
+    items[REPORT_STATUS.STATUS_INACTIVE] = "Đang xử lý";
+    items[REPORT_STATUS.STATUS_ACTIVE] = "Đã hoàn thành";
+    if (key !== undefined) {
+        return items[key];
+    }
+    return items;
+}
