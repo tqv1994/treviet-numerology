@@ -115,7 +115,7 @@
 				}, {});
 			} else {
 				window.notice({
-					text: 'Có lỗi xảy ra! Vui lòng thử lại sau',
+					text: err,
 					type: 'danger'
 				});
 			}
