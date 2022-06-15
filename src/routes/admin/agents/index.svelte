@@ -50,7 +50,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import BaseHeader from '$lib/components/BaseHeader.svelte';
-	export let name = 'Quản trị';
 	import { onMount } from 'svelte';
 	import type { DataWithPagination } from '$lib/stores/type';
 	import Table from '$lib/components/ABS/Global/Datatable/Table.svelte';
@@ -70,7 +69,9 @@
 	import Flatpickr from 'svelte-flatpickr';
 	import { packagesStore } from '$lib/stores/package';
 	import { apiUrl } from '$lib/env';
-
+	import { getAgentPackageColor } from '$lib/utils/user';
+	
+	export let name = 'Quản trị';
 	export let agentDatas: DataWithPagination<Agent>;
 	export let treeViews: AgentTreeView[];
 	export let keyword: string;
@@ -226,7 +227,10 @@
 
 	function onChangeRadio(event) {
 		excelChecked = event.currentTarget.value;
-	}
+	}	
+
+	console.log(getAgentPackageColor(packages, 1000));
+	
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -324,7 +328,7 @@
 				<div class="col-md-3" />
 			</div>
 		</div>
-		<div slot="cell" let:row let:cell>
+		<div slot="cell" let:row let:cell style={`color: #${getAgentPackageColor(packages, row.amount)}`}>
 			{#if cell.key === 'username'}
 				{row.user ? row.user.name : ''}
 			{:else if cell.key === 'action'}

@@ -5,19 +5,24 @@
 	import type { DataWithPagination } from '$lib/stores/type';
 	import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import Flatpickr from 'svelte-flatpickr';
-	import { formatDate } from '$lib/helper/datetime';
-	import {
-		getListFilterDatePurchaseService,
-		getListPurchasesService
-	} from '$lib/services/purchase.service';
 	import type { Purchase } from '$lib/stores/purchase';
+	import { objectToQueryString } from '$lib/utils/string';
+	import { pget } from '$lib/utils/fetch';
+	import { apiUrl } from '$lib/env';
+	import { redirect } from '$lib/components/redirect.svelte';
+	import { onMount } from 'svelte';
+	
+	let listTransaction: DataWithPagination<Purchase>;
+	let keyword: string;
+	let filter: Record<string, string | number | boolean> = {};
+	let currentPage: number = 1;
+	let sort: string = "-id";
+	let perPage: number = 10;
+	let excelChecked = 'all';
 
-	export let keyword: string;
-	export let currentPage: number = 1;
-	export let props: DataWithPagination<Purchase>;
-	export let filter: Record<string, string | number | boolean> = {};
-	export let perPage: number = 10;
-	export let sort: string = '-id';
+	onMount(async () => {
+		await getData();
+	});
 
 	let tableColumns: TableColumn[] = [
 		{
@@ -26,7 +31,7 @@
 		{
 			prop: 'user_create',
 			label: 'Người chuyển',
-			minWidth: 220,
+			minWidth: 190,
 			sortable: false
 		},
 		{
@@ -37,8 +42,8 @@
 		},
 		{
 			prop: 'agent_name',
-			label: 'Họ và tên',
-			minWidth: 220,
+			label: 'Người nhận',
+			minWidth: 190,
 			sortable: false
 		},
 		{
@@ -90,45 +95,73 @@
 		}
 	};
 
-	async function paginationChange(event: CustomEvent<number>) {
-		currentPage = event.detail;
+	export async function getData() {
+		let url = `purchases/filter?`
+		if (filter.from_date && filter.to_date) {
+			url += `&filter[from_date]=${filter.from_date}&filter[to_date]=${filter.to_date}`
+		}
+		const res = await pget(
+			`${url}&${objectToQueryString({
+				sort,
+				perPage,
+				page: currentPage
+			})}`
+		);
+		if (res.ok) {
+			const data = await res.json();
+			listTransaction = data.results;
+			console.log(listTransaction);
+		}
+	}
+
+	async function onChangePerPage(event: CustomEvent<number>) {
+		perPage = event.detail;		
+		await getData();
+	}
+
+	async function onSort(event: CustomEvent<string>) {
+		sort = event.detail;
 		await getData();
 	}
 
 	async function onSearch(event: CustomEvent<string>) {
-		// keyword = event.detail;
-		// await getData();
-	}
-
-	async function getData() {
-		window.openLoading();
-		props = await getListPurchasesService({
-			filter,
-			page: currentPage,
-			sort,
-			perPage
-		});
-		window.closeLoading();
-	}
-
-	async function onChangePerPage(event: CustomEvent<number>){
-		perPage = event.detail;
+		sort = event.detail;
 		await getData();
+	}
+
+	async function paginationChange(event: CustomEvent<number>) {
+		currentPage = event.detail;
+		console.log(currentPage);
+		
+		await getData();
+	}
+
+	function onExportExcel() {
+		let link = '';
+		if (excelChecked === 'all') {
+			link = `${apiUrl}/purchases/export-excel`
+		} else {
+			link = `${apiUrl}/purchases/export-excel?from_date=${filter.from_date}&to_date=${filter.to_date}`;
+		}
+		console.log(excelChecked, filter);
+		filter.from_date = '';
+		filter.to_date = '';
+		redirect(link);
 	}
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
 	<Table
 		createLabel="Xuất excel"
-		dataWithPagination={props}
+		dataWithPagination={listTransaction}
 		{tableColumns}
 		{keyword}
-		{sort}
-		{perPage}
 		navTab
 		on:changeCurrentPage={paginationChange}
-		on:search={onSearch}
 		on:changePerPage={onChangePerPage}
+		on:search={onSearch}
+		on:sort={onSort}
+		on:create={onExportExcel}
 	>
 		<div slot="label-search">
 			<p class="label-search mt-2 ml-4 mr-4">Tìm kiếm:</p>

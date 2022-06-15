@@ -1,39 +1,11 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, url }) => {
-		const keyword = url.searchParams.get('keyword') || '';
-		const currentPage = url.searchParams.get('page') || 1;
-		const sort = url.searchParams.get('sort') || "-id";
-		const perPage = url.searchParams.get('perPage') || 10;
 		const userId = session.user.id;
-		let purchaseDatas: DataWithPagination<Purchase> | undefined;
-		let purchaseByIdDatas: DataWithPagination<Purchase> | undefined;
 		let treeViews: AgentTreeView[];
 		let agentsLevel1: [];
 
-		const resPurchases = await fetch(
-			`/p/purchases/filter?${objectToQueryString({ keyword, page: currentPage, sort, perPage })}`
-		);
-		const resPurchaseByUserId =  await fetch(
-			`/p/purchases/filter?${objectToQueryString({ keyword, page: currentPage, create_user_id: userId, sort , perPage })}`
-		);;
 		const resTree = await fetch(`/p/tree-view/${session.user.id}`);
 		const resAgents = await fetch(`/p/agents/filter?filter[level]=1`);
-
-		if (resPurchases.ok) {
-			const data = await resPurchases.json();
-			purchaseDatas = data.results;
-		} else {
-			const err = await resPurchases.json();
-			console.error(err);
-		}
-
-		if (resPurchaseByUserId.ok) {
-			const data = await resPurchaseByUserId.json();
-			purchaseByIdDatas = data.results;
-		} else {
-			const err = await resPurchaseByUserId.json();
-			console.error(err);
-		}
 
 		if (resTree.ok) {
 			const data = await resTree.json();
@@ -53,10 +25,6 @@
 
 		return {
 			props: {
-				keyword,
-				currentPage,
-				purchaseDatas,
-				purchaseByIdDatas,
 				treeViews,
 				userId,
 				agentsLevel1
@@ -69,118 +37,42 @@
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseHeader from '$lib/components/BaseHeader.svelte';
 	import Tabs from '$lib/components/ABS/Tab/Tabs.svelte';
-	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
 	import ListMapSystemHistory from './components/tabs/ListMapTransactionHistory.svelte';
 	import MapTransactionHistory from './components/tabs/MapTransactionHistory.svelte';
 	import Folder from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
 	import { fade } from 'svelte/transition';
-	import { objectToQueryString } from '$lib/utils/string';
-	import { createPurchaseService } from '$lib/services/purchase.service';
 	import type { Tab } from '$lib/components/ABS/Tab/Tabs.svelte';
-	import type { DataWithPagination } from '$lib/stores/type';
 	import type { Load } from '@sveltejs/kit';
 	import type { AgentTreeView } from '$lib/stores/agent';
-	import type { Purchase, PurchaseFormData } from '$lib/stores/purchase';
-	import { getAgentsByUserId } from '$lib/services/agent.service';
-	import { formatDate } from '$lib/helper/datetime';
 	import { packagesStore } from '$lib/stores/package';
-	import { getUserByUserName } from '$lib/services/auth.service';
-	import { authStore } from '$lib/stores/auth';
 	import CreateTranfer from './components/tabs/createTranfer.svelte';
 
-	export let purchaseDatas: DataWithPagination<Purchase>;
-	export let purchaseByIdDatas: DataWithPagination<Purchase>;
 	export let treeViews: AgentTreeView[];
-	export let keyword: string;
-	export let currentPage: number;
 	export let userId: number;
 	export let agentsLevel1: [];
-		console.log(agentsLevel1);
 		
 	let packages = $packagesStore;
 	let listColor = convertListColor(packages);
-	let formData: PurchaseFormData;
 	let tabs: Tab[] = [
 		{
 			id: 1,
 			name: 'Lịch sử chuyển MAP hệ thống',
 			component: ListMapSystemHistory,
-			prop: purchaseDatas
 		},
 		{ 
 			id: 2, 
 			name: 'Lịch sử chuyển MAP', 
 			component: MapTransactionHistory, 
 			prop: {
-				purchaseByIdDatas: purchaseByIdDatas, 
 				userId: userId
 			} 
 		}
 	];
 
-	reset();
-
 	function convertListColor(packages) {
 		return packages.map(item => item.color).reverse();
 	}
 
-	function reset() {
-		formData = {
-			agent_id: "",
-			packages_id: 1,
-			one_time_password: ''
-		};
-	}
-
-	// async function onSubmit(event: CustomEvent<object>) {
-	// 	// event.preventDefault();
-	// 	const user = $authStore
-	// 	if (user?.google2fa_secret === null) {
-	// 		window.notice({
-	// 			text: 'Bạn chưa tạo mã 2FA',
-	// 			type: 'danger'
-	// 		});
-	// 	} else {
-	// 		window.openLoading();
-	// 		let finalFormData = {
-	// 			...formData,
-	// 			purchase_date: formatDate(new Date()),
-	// 			amount: 1
-	// 		}
-			
-	// 		try {
-	// 			await createPurchaseService(finalFormData);
-	// 			window.notice({
-	// 				text: 'Xuất MAP thành công',
-	// 				type: 'success'
-	// 			});
-	// 		} catch (err) {
-	// 			window.notice({
-	// 				text: err,
-	// 				type: 'danger'
-	// 			});
-	// 		}
-	// 		window.closeLoading();
-	// 	}
-	// }
-
-	// async function searchUserName(event: CustomEvent<object>) {
-	// 	agentName = "";
-	// 	event.preventDefault()
-	// 	let nameUserSearch = event.target.value;
-	// 	let user = await getUserByUserName(nameUserSearch);
-	// 	if (!user) {
-	// 		window.notice({
-	// 			text: 'Không tìm thấy username',
-	// 			type: 'danger'
-	// 		});
-	// 	}
-	// 	let agent = await getAgentsByUserId(user.id);
-	// 	formData.agent_id = agent.id;
-	// 	agentName = agent.agentname;		
-	// }
-
-	
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>

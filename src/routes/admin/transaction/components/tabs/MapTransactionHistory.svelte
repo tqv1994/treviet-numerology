@@ -2,21 +2,30 @@
 	import Table from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
 	import { fade } from 'svelte/transition';
-	import { getListFilterDatePurchaseService, getListPurchasesService } from '$lib/services/purchase.service';
 	import type { DataWithPagination } from '$lib/stores/type';
 	import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import Flatpickr from 'svelte-flatpickr';
-	import { formatDate } from '$lib/helper/datetime';
 	import type { Purchase } from '$lib/stores/purchase';
+	import { onMount } from 'svelte';
+	import { pget } from '$lib/utils/fetch';
+	import { objectToQueryString } from '$lib/utils/string';
+	import { redirect } from '$lib/components/redirect.svelte';
+	import { apiUrl } from '$lib/env';
 
-	export let keyword: string;
-	export let currentPage: number = 1;
 	export let props: any;
-	export let listPurchase: DataWithPagination<Purchase> = props.purchaseByIdDatas;
 	export let userId: number = props.userId;
-	export let perPage: number = 10;
-	export let sort: string = "-id";
-	export let filter: Record<string, string | number | boolean> = {};
+	
+	let listPurchase: DataWithPagination<Purchase>;
+	let keyword: string;
+	let filter: Record<string, string | number | boolean> = {};
+	let currentPage: number = 1;
+	let sort: string = "-id";
+	let perPage: number = 10;
+	let excelChecked = 'all';
+
+	onMount(async () => {
+		await getData();
+	});
 
 	let tableColumns: TableColumn[] = [
 		{
@@ -83,36 +92,58 @@
 		}
 	};
 
-	async function paginationChange(event: CustomEvent<number>) {
-		currentPage = event.detail;
+	export async function getData() {
+		let url = `purchases/filter?filter[create_user_id]=${userId}`
+		if (filter.from_date && filter.to_date) {
+			url += `&filter[from_date]=${filter.from_date}&filter[to_date]=${filter.to_date}`
+		}
+		const res = await pget(
+			`${url}&${objectToQueryString({
+				sort,
+				perPage,
+				page: currentPage
+			})}`
+		);
+		if (res.ok) {
+			const data = await res.json();
+			listPurchase = data.results;
+			console.log(listPurchase);
+		}
+	}
+
+	async function onChangePerPage(event: CustomEvent<number>) {
+		perPage = event.detail;		
+		await getData();
+	}
+
+	async function onSort(event: CustomEvent<string>) {
+		sort = event.detail;
 		await getData();
 	}
 
 	async function onSearch(event: CustomEvent<string>) {
-		// keyword = event.detail;
-		// await getData();
-	}
-
-	async function getData() {
-		filter.create_user_id = userId;
-		window.openLoading();
-		listPurchase = await getListPurchasesService({
-			page: currentPage,
-			filter,
-			perPage,
-			sort
-		});
-		window.closeLoading();
-	}
-
-	async function onChangePerPage(event: CustomEvent<number>){
-		perPage = event.detail;
-		await getData();
-	}
-
-	async function onSort(event: CustomEvent<string>){
 		sort = event.detail;
 		await getData();
+	}
+
+	async function paginationChange(event: CustomEvent<number>) {
+		currentPage = event.detail;
+		console.log(currentPage);
+		
+		await getData();
+	}
+
+	function onExportExcel() {
+		let link = '';
+		if (excelChecked === 'all') {
+			link = `${apiUrl}/purchases/export-excel`
+		} else {
+			link = `${apiUrl}/purchases/export-excel?create_user_id=${userId}&from_date=${filter.from_date}&to_date=${filter.to_date}`;
+		}
+		console.log(excelChecked, filter);
+		filter.from_date = '';
+		filter.to_date = '';
+		redirect(link);
 	}
 </script>
 
@@ -122,13 +153,12 @@
 		dataWithPagination={listPurchase}
 		{tableColumns}
 		{keyword}
-		{sort}
-		{perPage}
 		navTab
 		on:changeCurrentPage={paginationChange}
-		on:search={onSearch}
 		on:changePerPage={onChangePerPage}
-		on:sorting={onSort}
+		on:search={onSearch}
+		on:sort={onSort}
+		on:create={onExportExcel}
 	>	
 		<div slot="label-search">
 			<p class="label-search mt-2 ml-4 mr-4">Search:</p>

@@ -104,7 +104,8 @@ import Flatpickr from 'svelte-flatpickr';
 		const res = await pget(
 			`${url}&${objectToQueryString({
 				sort,
-				perPage
+				perPage,
+				page: currentPage
 			})}`
 		);
 		if (res.ok) {
@@ -135,12 +136,7 @@ import Flatpickr from 'svelte-flatpickr';
 	}
 
 	function onExportExcel() {
-		let link = '';
-		if (excelChecked === 'all') {
-			link = `${apiUrl}/transfers/export-excel`
-		} else {
-			link = `${apiUrl}/transfers/export-excel?agent_id=${agenId}from_date=${filter.from_date}&to_date=${filter.to_date}`;
-		}
+		let link = `${apiUrl}/purchases/export-excel?agent_id=${agenId}from_date=${filter.from_date}&to_date=${filter.to_date}`;
 		console.log(excelChecked, filter);
 		filter.from_date = '';
 		filter.to_date = '';

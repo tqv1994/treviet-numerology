@@ -111,15 +111,6 @@
 						isActive: checkMenuActive('/agent/map-publishing', pathname)
 					}}
 				/>
-
-				<SideBarItem
-					link={{
-						name: 'Đại lý',
-						icon: 'ni ni-align-left-2',
-						path: '/agent/transaction',
-						isActive: checkMenuActive('/agent/transaction', pathname)
-					}}
-				/>
 				<SideBarItem
 					link={{
 						name: 'Cây hệ thống',
@@ -144,15 +135,6 @@
 						icon: 'ni ni-spaceship',
 						path: '/agent/support-information',
 						isActive: checkMenuActive('/agent/support-information', pathname)
-					}}
-				/>
-
-				<SideBarItem
-					link={{
-						name: 'Cài đặt',
-						icon: 'ni ni-settings-gear-65',
-						path: '/agent/settings',
-						isActive: checkMenuActive('/agent/settings', pathname)
 					}}
 				/>
 			</ul>

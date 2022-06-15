@@ -141,6 +141,16 @@
 						isActive: checkMenuActive('/admin/agents', pathname, true)
 					}}
 				/>
+
+				<SideBarItem
+					link={{
+						name: 'Cây đại lý',
+						icon: 'ni ni-world-2',
+						path: '/admin/agents/system-tree',
+						isActive: checkMenuActive('/admin/agents/system-tree', pathname, true)
+					}}
+				/>
+
 				<SideBarItem
 					link={{
 						name: 'Danh sách gói',

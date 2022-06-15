@@ -84,3 +84,9 @@ export function checkRole(name: string, user?: User): boolean {
 	}
 	return false;
 }
+
+export function getAgentPackageColor(packages: [], amount: number): string {
+	let reversePackages = packages;
+	let color = reversePackages.find(item => item.amount >= amount);
+	return color.color
+}

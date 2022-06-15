@@ -1,14 +1,11 @@
 <script lang="ts">
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
-	import { formatDate } from '$lib/utils/datetime';
-	import type { AgentTreeView } from '$lib/stores/agent';
+	import { formatDate } from '$lib/helper/datetime';
 	import { authStore } from '$lib/stores/auth';
 	import { packagesStore } from '$lib/stores/package';
-	import type { TransferForm } from '$lib/stores/transfer';
 	import { ppost } from '$lib/utils/fetch';
 	import { getErrorMessage } from '$lib/utils/response';
-	import { getMyAgent } from '$lib/utils/user';
 	import { isReloadTab } from '$lib/components/ABS/Tab/Tabs.svelte';
 	import * as yup from 'yup';
 	import { getMsgRequired } from '$lib/utils/message';
@@ -33,7 +30,7 @@
 			agent_id:  undefined,
 			packages_id: 1,
 			one_time_password: '',
-			purchase_date: formatDate(new Date(), 'yyyy-mm-dd'),
+			purchase_date: formatDate(new Date()),
 			amount: 1
 		};
 	}
@@ -92,7 +89,9 @@
 						<BaseInput error={errors.agent_id}>
 							<select class="form-control" bind:value={formData.agent_id}>
 								{#each agentsLevel1 || [] as agent}
-									<option value={agent.id}>{agent.agentname}</option>
+									{#if agent.ref_code_agent == null}
+										<option value={agent.id}>{agent.agentname}</option>
+									{/if}
 								{/each}
 							</select>
 						</BaseInput>
