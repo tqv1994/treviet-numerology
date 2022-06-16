@@ -1,30 +1,3 @@
-<script lang="ts" context="module">
-	export const load: Load = async ({ session, fetch }) => {
-		const user: User = session.user;
-		if (user) {
-			if (user.google2fa_secret) {
-				const res = await fetch('/p/get-qr-image', {
-					method: 'POST',
-					body: JSON.stringify({ email: user.email || '', key: user.google2fa_secret })
-				});
-				
-				if (res.ok) {
-					const data = await res.json();
-
-					const imageQR = data['QR-image'];
-					session.user.imageQR = imageQR;
-					authStore.update((s) => {
-						if (s) {
-							s.imageQR = imageQR;
-						}
-						return s;
-					});
-				}
-			}
-		}
-		return {};
-	};
-</script>
 <script lang="ts">
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
@@ -40,7 +13,6 @@
 	import { authStore, type User } from '$lib/stores/auth';
 	export let status: false;
 	export let hidden: string = '' ;
-
 	
 	let errors: any = {};
 	const schemaValidator = yup.object().shape({

@@ -1,8 +1,31 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, url }) => {
-		const userId = session.user.id;
+		const user = session.user;
 		let treeViews: AgentTreeView[];
 		let agentsLevel1: [];
+
+		if (user) {
+			if (user.google2fa_secret) {
+				const res = await fetch('/p/get-qr-image', {
+					method: 'POST',
+					body: JSON.stringify({ email: user.email || '', key: user.google2fa_secret })
+				});
+				
+				if (res.ok) {
+					const data = await res.json();
+					console.log("data", data);
+
+					const imageQR = data['QR-image'];
+					session.user.imageQR = imageQR;
+					authStore.update((s) => {
+						if (s) {
+							s.imageQR = imageQR;
+						}
+						return s;
+					});
+				}
+			}
+		}
 
 		const resTree = await fetch(`/p/tree-view/${session.user.id}`);
 		const resAgents = await fetch(`/p/agents/filter?filter[level]=1`);
@@ -12,6 +35,7 @@
 			treeViews = data.results;
 		} else {
 			const err = await resTree.json();
+			console.log(err);
 		}
 
 		if (resAgents.ok) {
@@ -19,12 +43,13 @@
 			agentsLevel1 = data.results.data;
 		} else {
 			const err = await resAgents.json();
+			console.log(err);
 		}
 
 		return {
 			props: {
 				treeViews,
-				userId,
+				userId: user.id,
 				agentsLevel1
 			}
 		};
@@ -44,6 +69,7 @@
 	import type { AgentTreeView } from '$lib/stores/agent';
 	import { packagesStore } from '$lib/stores/package';
 	import CreateTranfer from './components/tabs/createTranfer.svelte';
+	import { authStore } from '$lib/stores/auth';
 
 	export let treeViews: AgentTreeView[];
 	export let userId: number;
