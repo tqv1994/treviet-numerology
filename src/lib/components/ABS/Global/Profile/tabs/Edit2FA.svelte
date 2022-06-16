@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth';
 	import { ppost, pget } from '$lib/utils/fetch';
+	console.log($authStore);
 	reset();
 	function reset() {}
 	async function onSubmit() {
@@ -35,7 +36,7 @@
 			</div>
 		</div>
 	</form>
-	<div>
+	<div class="mt-4">
 		<span class='label-link-2fa'>
 			* Để xác minh 2FA vui lòng tải phần mềm Google Authenticator về Smartphone của bạn
 		</span>

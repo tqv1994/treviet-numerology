@@ -1,15 +1,47 @@
+<script lang="ts" context="module">
+	export const load: Load = async ({ session, fetch }) => {
+		const user: User = session.user;
+		if (user) {
+			if (user.google2fa_secret) {
+				const res = await fetch('/p/get-qr-image', {
+					method: 'POST',
+					body: JSON.stringify({ email: user.email || '', key: user.google2fa_secret })
+				});
+				
+				if (res.ok) {
+					const data = await res.json();
+
+					const imageQR = data['QR-image'];
+					session.user.imageQR = imageQR;
+					authStore.update((s) => {
+						if (s) {
+							s.imageQR = imageQR;
+						}
+						return s;
+					});
+				}
+			}
+		}
+		return {};
+	};
+</script>
 <script lang="ts">
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
 	import { formatDate } from '$lib/helper/datetime';
-	import { authStore } from '$lib/stores/auth';
 	import { packagesStore } from '$lib/stores/package';
 	import { ppost } from '$lib/utils/fetch';
+	import type { Load } from '@sveltejs/kit';
 	import { getErrorMessage } from '$lib/utils/response';
 	import { isReloadTab } from '$lib/components/ABS/Tab/Tabs.svelte';
 	import * as yup from 'yup';
 	import { getMsgRequired } from '$lib/utils/message';
 	import type { Purchase, PurchaseFormData } from '$lib/stores/purchase';
+	import { authStore, type User } from '$lib/stores/auth';
+	export let status: false;
+	export let hidden: string = '' ;
+
+	
 	let errors: any = {};
 	const schemaValidator = yup.object().shape({
 		agent_id: yup
@@ -33,6 +65,11 @@
 			purchase_date: formatDate(new Date()),
 			amount: 1
 		};
+	}
+
+	function show2FA() {
+		status = true;
+		hidden = "hidden"
 	}
 
 	async function onSubmit() {
@@ -123,6 +160,17 @@
 				<div class="col-lg-8">
 					<div class="">
 						<BaseInput error={errors.one_time_password} placeholder="Nhập mã 2FA" bind:value={formData.one_time_password} />
+						{#if ($authStore.google2fa_secret === null) || ($authStore.google2fa_secret ==='')}
+										<div class='row mt--3'>
+											<p class='label-link-2fa text-left col-6'>* Bạn chưa có mã 2FA</p>
+											<a href="/admin/profile" class='text-right link-create-2fa col-6'>Tạo mã 2FA ngay</a>
+										</div>
+										{:else}
+										<span on:click={show2FA} {hidden} class="get-image-2fa">Lấy mã 2FA ngay</span>
+											{#if (status == true)}
+											{@html $authStore.imageQR}
+											{/if}
+										{/if}
 					</div>
 				</div>
 			</div>
@@ -132,3 +180,40 @@
 		</div>
 	</form>
 </Card>
+<style lang="scss">
+	.text-systerm {
+		color: 800000;
+		font-size: 12px;
+	}
+	.filter-form-content {
+		display: flex;
+	}
+	.badge-success {
+		background-color: #1aae6f;
+		color: white;
+	}
+	.label-link-2fa{
+		color: red;
+		font-style: italic;
+	}
+	.link-create-2fa{
+		text-decoration: underline;
+		font-weight: bold;
+	}
+	.get-image-2fa{
+		display: inline-block;
+		font-weight: 600;
+		text-align: center;
+		vertical-align: middle;
+		user-select: none;
+		border: 1px solid transparent;
+		padding: 0.625rem 1.25rem;
+		font-size: 0.875rem;
+		line-height: 1.5;
+		border-radius: 0.25rem;
+		color: #fff;
+		background-color: #2dce89;
+		border-color: #2dce89;
+		box-shadow: 0 4px 6px rgb(50 50 93 / 11%), 0 1px 3px rgb(0 0 0 / 8%);
+	}
+</style>

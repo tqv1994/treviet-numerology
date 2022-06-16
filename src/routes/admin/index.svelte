@@ -1,32 +1,39 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, url }) => {
 		let packageDatas: DataTableAgenctLevel[] | undefined;
-		const keyword = url.searchParams.get('keyword') || '';
-		const currentPage = url.searchParams.get('page') || 1;
-		let agentDatas: DataTableAgentList[] | undefined;
+		const myAgent = getMyAgent(session.user);
+		let treeViews: DataTableAgentList[];
+		let role = session.user.roles[0].name;
 		const res = await fetch(`/p/packages`);
-		const resAgent = await fetch(`/p/agents?${objectToQueryString({ keyword, page: currentPage,sort:'id' })}`);
 		
+		if (myAgent) {
+			try {
+				const res = await fetch(`/p/tree-view/${myAgent.id}`);
+
+				if (res.ok) {
+					const data = await res.json();
+					treeViews = data.results;
+					console.log("data", treeViews);
+				} else {
+					const err = await res.json();
+					console.error(err);
+				}
+			} catch (error) {
+				console.log(error);
+			}
+		}
 		if (res.ok) {
 			const data = await res.json();
+			
 			packageDatas = data.results.data;
 		} else {
 			const err = await res.json();
 			console.error(err);
 		}
-
-		if (resAgent.ok) {
-			const data = await resAgent.json();
-			agentDatas = data.results.data;
-		} else {
-			const err = await resAgent.json();
-			console.error(err);
-		}
-
 		return {
 			props: {
 				packageDatas,
-				agentDatas
+				treeViews
 			}
 		};
 	};
@@ -47,15 +54,13 @@
 	import type { DataTableAgentList } from '$lib/components/ABS/Agent/AgentList.svelte';
 	import AgentLevelTable from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
-	
-	import { appName } from '$lib/env';
-	import type { DataWithPagination } from "$lib/stores/type";
 	import type { Load } from "@sveltejs/kit";
-	import { objectToQueryString } from "$lib/utils/string";
-	import { packagesStore, type Package } from "$lib/stores/package";
-	import type { Agent, AgentTreeView } from "$lib/stores/agent";
+  import type { Agent, AgentTreeView } from "$lib/stores/agent";
+  import { getMyAgent } from '$lib/utils/user';
+	export let myAgent: Agent;
+	export let role: string;
 
-	export let agentDatas: DataTableAgentList[];
+	export let treeViews: DataTableAgentList[];
 	export let packageDatas: DataTableAgenctLevel[];
 	
   </script>
@@ -136,7 +141,7 @@
 		<!--Tables-->
 		<div class="row">
 			<div class="col-xl-8">
-				<AgentList tableData={agentDatas} />
+				<AgentList tableData={treeViews} />
 			</div>
 			<div class="col-xl-4">
 				<AgentLevelTable tableData={packageDatas} />

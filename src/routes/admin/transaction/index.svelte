@@ -12,7 +12,6 @@
 			treeViews = data.results;
 		} else {
 			const err = await resTree.json();
-			console.error(err);
 		}
 
 		if (resAgents.ok) {
@@ -20,7 +19,6 @@
 			agentsLevel1 = data.results.data;
 		} else {
 			const err = await resAgents.json();
-			console.error(err);
 		}
 
 		return {

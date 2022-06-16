@@ -41,6 +41,8 @@
 	export let treeViews: AgentTreeView[];
 	export let role: string;
 
+	console.log(treeViews);
+	
 	let packages = $packagesStore;
 	let listColor = convertListColor(packages);
 	

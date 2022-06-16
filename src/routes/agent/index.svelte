@@ -1,32 +1,40 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, url }) => {
 		let packageDatas: DataTableAgenctLevel[] | undefined;
-		const keyword = url.searchParams.get('keyword') || '';
-		const currentPage = url.searchParams.get('page') || 1;
-		let agentDatas: DataTableAgentList[] | undefined;
-		const res = await fetch(`/p/packages`);
-		const resAgent = await fetch(`/p/agents?${objectToQueryString({ keyword, page: currentPage,sort:'id' })}`);
+		const myAgent = getMyAgent(session.user);
+		let treeViews: DataTableAgentList[];
+		let role = session.user.roles[0].name;
+		console.log('tu',session.user);
 		
+		const res = await fetch(`/p/packages`);
+		
+		if (myAgent) {
+			try {
+				const res = await fetch(`/p/tree-view/${myAgent.id}`);
+
+				if (res.ok) {
+					const data = await res.json();
+					treeViews = data.results;
+				} else {
+					const err = await res.json();
+					console.error(err);
+				}
+			} catch (error) {
+				console.log(error);
+			}
+		}
 		if (res.ok) {
 			const data = await res.json();
+			
 			packageDatas = data.results.data;
 		} else {
 			const err = await res.json();
 			console.error(err);
 		}
-
-		if (resAgent.ok) {
-			const data = await resAgent.json();
-			agentDatas = data.results.data;
-		} else {
-			const err = await resAgent.json();
-			console.error(err);
-		}
-
 		return {
 			props: {
 				packageDatas,
-				agentDatas
+				treeViews
 			}
 		};
 	};
@@ -48,45 +56,28 @@
 	import type { DataTableAgentList } from '$lib/components/ABS/Agent/AgentList.svelte';
 	import AgentLevelTable from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
 	import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
-	import { appName } from '$lib/env';
-	import type { DataWithPagination } from "$lib/stores/type";
 	import type { Load } from "@sveltejs/kit";
-	import { objectToQueryString } from "$lib/utils/string";
-	import type { Package } from "$lib/stores/package";
+	import { getMyAgent } from '$lib/utils/user';
 	import type { Agent, AgentTreeView } from "$lib/stores/agent";
+	export let myAgent: Agent;
+	export let role: string;
 	
 
+	export let treeViews: DataTableAgentList[];
 	export let packageDatas: DataTableAgenctLevel[];
-	export let agentDatas: DataTableAgentList[];
 	
+	console.log(treeViews);
+
+	export let sumAgent = treeViews.length;
+	
+	let sum = 0;
+		for (let i = 0; i < treeViews.length; i++){
+			sum += treeViews[i].doanhso;
+		}
+	let sumRevenueAgent = sum;
+
 	onMount(function () {
-		// window.fusionCharts = FusionCharts;
-		// window.charts = Charts;
-		// window.fusionTheme = FusionTheme;
-		// window.candyTheme = CandyTheme;
-		// fcRoot(window.fusionCharts, window.charts, window.fusionTheme, window.candyTheme);
-		let topmenu = document.getElementsByTagName('nav').item(0);
-		topmenu.classList.add('navbar-dark');
-		topmenu.classList.remove('navbar-light');
-		let search = document.getElementsByTagName('form').item(0);
-		search.classList.remove('navbar-search-dark');
-		search.classList.add('navbar-search-light');
-		window.addEventListener('resize', function () {
-			lineChartConfig = {
-				type: 'spline',
-				width: '100%',
-				height: '370',
-				renderAt: 'chart-container',
-				dataSource: line
-			};
-			barChartConfig = {
-				type: 'column2d',
-				width: '100%',
-				height: '370',
-				renderAt: 'chart-container',
-				dataSource: bigLineChart.barData
-			};
-		});
+		
 	});
 
 	let line = '';
@@ -246,6 +237,8 @@
 		dataSource: line
 	};
 
+	
+
 	let barChartConfig = {
 		type: 'column2d',
 		width: '100%',
@@ -304,7 +297,7 @@
           <StatsCard
             title="Doanh số đại lý tháng"
             type="gradient-info"
-            subTitle="50"
+            subTitle="{sumRevenueAgent}"
             icon="ni ni-chart-bar-32"
             bodyClasses="bg-revenue-agent">
             <div slot="footer">
@@ -318,7 +311,7 @@
           <StatsCard
             title="Tổng số đại lý trực thuộc"
             type="gradient-info"
-            subTitle="2000"
+            subTitle="{sumAgent}"
             icon="ni ni-chart-pie-35"
             bodyClasses="bg-sum-agent">
             <div slot="footer">
@@ -350,7 +343,7 @@
 		<!--Tables-->
 		<div class="row">
 			<div class="col-xl-8">
-				<AgentList tableData={agentDatas} />
+				<AgentList tableData={treeViews} packages={packageDatas.reverse()}/>
 			</div>
 			<div class="col-xl-4">
 				<AgentLevelTable tableData={packageDatas} />

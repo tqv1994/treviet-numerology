@@ -1,4 +1,5 @@
 <script lang="ts" context="module">
+  import { authStore } from '$lib/stores/auth';
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;

@@ -1,24 +1,25 @@
 <script lang="ts" context="module">
 	export type DataTableAgentList = {
-		username: string;
 		agentname: string;
 		created_at: string; 
-		phone: string;
-		email: string;
-		status: string;
+		level: string;
+		doanhso: string;
 	};
 
 </script>
 
 <script lang="ts">
 	export let tableData: DataTableAgentList[] = [];
-
+	export let packages: [];
+	console.log(packages);
+	
 	import { onMount } from 'svelte';
 	import jQuery from 'jquery';
 	import dt from 'datatables.net';
 	import dtCss from 'datatables.net-dt';
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseProgress from '$lib/components/BaseProgress.svelte';
+	import { getAgentPackageColor } from '$lib/utils/user';
 
 	let tableElement;
 	onMount(() => {
@@ -62,14 +63,14 @@
 					</span>
 				</th>
 				<th style="min-width: 150px; width: 20%;">
-					Số điện thoại
+					Doanh số
 					<span class="caret-wrapper">
 						<i class="sort-caret ascending" />
 						<i class="sort-caret descending" />
 					</span>
 				</th>
 				<th style="min-width: 150px; width: 20%;">
-					Email
+					Cấp độ
 					<span class="caret-wrapper">
 						<i class="sort-caret ascending" />
 						<i class="sort-caret descending" />
@@ -103,11 +104,11 @@
 					</td>
 
 					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
-						{element.phone}
+						{element.doanhso}
 					</td>
 
-					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
-						{element.email}
+					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;{`color: #${getAgentPackageColor(packages, element.amount)}`}">
+						Level {element.level} 
 					</td>
 					<!-- <td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
 						<div class="d-flex align-items-center">
