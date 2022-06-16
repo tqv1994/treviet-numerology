@@ -4,11 +4,9 @@
 		const myAgent = getMyAgent(session.user);
 		let treeViews: DataTableAgentList[];
 		const res = await fetch(`/p/packages`);
-
 		if (myAgent) {
 			try {
 				const res = await fetch(`/p/tree-view/${myAgent.id}`);
-
 				if (res.ok) {
 					const data = await res.json();
 					treeViews = data.results;
@@ -57,7 +55,7 @@
 	export let myAgent: Agent;
 	export let role: string;
 
-	export let treeViews: DataTableAgentList[];
+	export let treeViews: DataTableAgentList[] = [];
 	export let packageDatas: DataTableAgenctLevel[];
 
 	export let sumAgent = treeViews.length;

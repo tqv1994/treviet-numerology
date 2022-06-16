@@ -7,7 +7,6 @@
 		let faqDatas: DataWithPagination<Faq> | undefined;
 		const res = await fetch(
 			`/p/faqs/filter?${objectToQueryString({
-				filter: { name: keyword },
 				page: currentPage,
 				sort,
 				perPage

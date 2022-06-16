@@ -4,6 +4,9 @@
 		let myChildAgents: AgentTreeView[] = [];
 		let treeViews: AgentTreeView[] = [];
 		if (myAgent) {
+			if (myAgent.ref_code_agent !== null) {
+				return redirectAgent('/transfers');
+			}
 			try {
 				const res = await fetch(`/p/tree-view/${myAgent.id}`);
 				if (res.ok) {
@@ -16,9 +19,6 @@
 				}
 			} catch (error) {
 				console.log(error);
-			}
-			if(myAgent.ref_code_agent !== null){
-				return redirectAgent('/transfers');
 			}
 		}
 		return {
@@ -39,39 +39,36 @@
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseInput from '$lib/components/Inputs/BaseInput.svelte';
 	import { fade } from 'svelte/transition';
-	import { createTransferService } from '$lib/services/transfer.service';
-	import { objectToQueryString } from '$lib/utils/string';
 	import type { Tab } from '$lib/components/ABS/Tab/Tabs.svelte';
-	import type { DataWithPagination } from '$lib/stores/type';
-	import type { ReportFormData } from '$lib/stores/report';
 	import type { AgentTreeView } from '$lib/stores/agent';
-	import type { Transfer, TransferForm } from '$lib/stores/transfer';
 	import type { Load } from '@sveltejs/kit';
 	import Folder from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
 	import TransferMapHistory from './components/tabs/TransferMapHistory.svelte';
-	import { getMyAgent } from '$lib/utils/user';
-	import { authStore } from '$lib/stores/auth';
-	import { formatDate } from '$lib/helper/datetime';
+	import { getMyAgent, getReferralLink } from '$lib/utils/user';
 	import { packagesStore } from '$lib/stores/package';
 	import CreateTranfer from './components/tabs/createTranfer.svelte';
-import { redirectAgent } from '$lib/components/redirect.svelte';
+	import { redirectAgent } from '$lib/components/redirect.svelte';
+	import { authStore } from '$lib/stores/auth';
 
 	export let myChildAgents: AgentTreeView[];
 	export let treeViews: AgentTreeView[];
 	export let myAgent: {};
 	let packages = $packagesStore;
 	let listColor = convertListColor(packages);
-	
+	let toggleSystemTree: boolean = false;
 	function convertListColor(packages) {
-		return packages.map(item => item.color).reverse();
+		return packages.map((item) => item.color).reverse();
 	}
-	
-	console.log(treeViews);
 
 	let tabs: Tab[] = [
-		{ id: 1, name: 'Lịch sử giao dịch MAP', component: ListMapTransferHistory, prop: {myAgent: myAgent} },
-		{ id: 2, name: 'Lịch sử nhận MAP', component: ReceiveMapHistory, prop: {myAgent: myAgent} },
-		{ id: 3, name: 'Lịch sử chuyển MAP', component: TransferMapHistory, prop: {myAgent: myAgent} }
+		{
+			id: 1,
+			name: 'Lịch sử giao dịch MAP',
+			component: ListMapTransferHistory,
+			prop: { myAgent: myAgent }
+		},
+		{ id: 2, name: 'Lịch sử nhận MAP', component: ReceiveMapHistory, prop: { myAgent: myAgent } },
+		{ id: 3, name: 'Lịch sử chuyển MAP', component: TransferMapHistory, prop: { myAgent: myAgent } }
 	];
 </script>
 
@@ -90,21 +87,29 @@ import { redirectAgent } from '$lib/components/redirect.svelte';
 				<!-- Card header -->
 				<h3 slot="header" class="mb-0">REF LINK</h3>
 				<!-- Card body -->
-				<form>
+				<form action="javascript:void(0);">
 					<!-- Input groups with icon -->
 					<div class="row">
 						<div class="col-lg-6">
 							<div class="">
-								<BaseInput
-									placeholder="https://tgtholding.com/sign-up/vietthach.html"
-								/>
+								<BaseInput value={getReferralLink($authStore)} disabled />
 							</div>
 						</div>
 						<div class="col-lg-6">
 							<div class="text-left" style="float: left">
 								<button
-									class="btn btn-success btn saveAsExcel"
-									on:click={(_) => download(sheets, 'example' + '.xlsx')}>Xuất map</button
+									class="btn btn-success btn"
+									type="button"
+									on:click={() => {
+										/* Copy the text inside the text field */
+										navigator.clipboard.writeText(getReferralLink($authStore) || '');
+
+										/* Alert the copied text */
+										window.notice({
+											text: 'Link giới thiệu đã được sao chép',
+											type: 'success'
+										});
+									}}>Sao chép</button
 								>
 							</div>
 						</div>
@@ -126,11 +131,21 @@ import { redirectAgent } from '$lib/components/redirect.svelte';
 				<!-- Card header -->
 				<h3 slot="header" class="mb-0">
 					Hệ thống đại lý
-					<span class=" badge-pill badge-success badge ml-4">Close All</span>
-					<span class=" badge-pill badge-success badge">Open All</span>
+					<button class="badge-pill {!toggleSystemTree ? 'badge-success' : ''} badge ml-4" on:click={()=>{
+						toggleSystemTree = false;
+					}}>Close All</button>
+					<button class="badge-pill badge {toggleSystemTree ? 'badge-success' : ''}" on:click={()=>{
+						toggleSystemTree = true;
+					}}>Open All</button>
 				</h3>
 				<!-- Card body -->
-				<Folder expanded={false} agentTreeViews={treeViews} ref_code={null} role='member' colors={listColor}/>
+				<Folder
+					expanded={toggleSystemTree}
+					agentTreeViews={treeViews}
+					ref_code={null}
+					role="member"
+					colors={listColor}
+				/>
 			</Card>
 			<!-- Input groups -->
 		</div>

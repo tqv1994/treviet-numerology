@@ -41,8 +41,6 @@
 	import type { Load } from '@sveltejs/kit';
 	import { getMyAgent } from '$lib/utils/user';
 	import type { Agent, AgentTreeView } from '$lib/stores/agent';
-	import { getDataTreeView } from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
-	import { writable } from 'svelte/store';
 	import Card from '$lib/components/Cards/Card.svelte';
 	import { redirectAgent } from '$lib/components/redirect.svelte';
 	let tabs: Tab[] = [

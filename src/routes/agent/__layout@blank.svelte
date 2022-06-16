@@ -1,15 +1,6 @@
 <script lang="ts" context="module">
 	export const load: Load = async ({ fetch, session, url }) => {
 		const myAgent = getMyAgent(session.user);
-		const res = await fetch(`/p/packages?sort=id`);
-		if (res.ok) {
-			const data = await res.json();
-			packagesStore.set(data.results.data);
-		} else {
-			const err = await res.json();
-			console.error(err);
-		}
-		
 		if (!session.user || !myAgent) {
 			redirect('/');
 		}

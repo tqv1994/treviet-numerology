@@ -12,6 +12,7 @@
 	import { isReloadTab } from '$lib/components/ABS/Tab/Tabs.svelte';
 	import * as yup from 'yup';
 	import { getMsgRequired } from '$lib/utils/message';
+	import { STATUS } from '$lib/stores/type';
 	let errors: any = {};
 	const schemaValidator = yup.object().shape({
 		agent_receive_id: yup
@@ -28,6 +29,12 @@
 	let formData: TransferForm = reset();
 	export let myChildAgents: AgentTreeView[];
 	export let myPackages: [];
+
+	$: if ((myChildAgents || []).length > 0) {
+		console.log(myChildAgents);
+		myChildAgents = myChildAgents.filter((item) => item.status !== STATUS.ACTIVE);
+	}
+
 	function reset(): TransferForm {
 		return {
 			agent_id: getMyAgent($authStore)?.id || undefined,
@@ -39,7 +46,7 @@
 	}
 
 	async function onSubmit() {
-		const user = $authStore
+		const user = $authStore;
 		if (user?.google2fa_secret === null) {
 			window.notice({
 				text: 'Bạn chưa tạo mã 2FA',
@@ -123,7 +130,11 @@
 				</div>
 				<div class="col-lg-8">
 					<div class="">
-						<BaseInput error={errors.one_time_password} placeholder="Nhập mã 2FA" bind:value={formData.one_time_password} />
+						<BaseInput
+							error={errors.one_time_password}
+							placeholder="Nhập mã 2FA"
+							bind:value={formData.one_time_password}
+						/>
 					</div>
 				</div>
 			</div>
