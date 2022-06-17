@@ -53,6 +53,7 @@
 	import { formatNewDate } from '$lib/helper/datetime';
 	import { apiUrl } from '$lib/env';
 	import { redirect } from '$lib/components/redirect.svelte';
+import { getLink } from '$lib/utils/link';
 
 	export let name = 'Quản trị';
 	export let reportDatas: DataWithPagination<Report>;
@@ -271,7 +272,7 @@
 				{row.created_at ? formatNewDate(row.created_at) : ''}
 			{:else if cell.key === 'report_link'}
 				{#if cell.value !== null} 
-					<a href={`${apiUrl}${cell.value}`}>Link PDF</a>
+					<a target="_blank" href={getLink(cell.value)}>Link PDF</a>
 				{:else}
 					Đang xử lý
 				{/if}

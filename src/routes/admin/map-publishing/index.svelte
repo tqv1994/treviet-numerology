@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-  import { authStore } from '$lib/stores/auth';
+	import { authStore } from '$lib/stores/auth';
 	export const load: Load = async ({ fetch, session, url }) => {
 		const keyword = url.searchParams.get('keyword') || '';
 		const currentPage = url.searchParams.get('page') || 1;
@@ -44,13 +44,14 @@
 	import type { Report } from '$lib/stores/report';
 	import { formatDate } from '$lib/helper/datetime';
 	import { apiUrl } from '$lib/env';
-import { redirect } from '$lib/components/redirect.svelte';
+	import { redirect } from '$lib/components/redirect.svelte';
+	import { getLink } from '$lib/utils/link';
 
 	export let reportDatas: DataWithPagination<Report>;
 	export let keyword: string;
 	export let currentPage: number;
-	
-  let filterTime = true;
+
+	let filterTime = true;
 	const flatpickrOptionsRange = {
 		mode: 'range',
 		enableTime: true,
@@ -143,7 +144,7 @@ import { redirect } from '$lib/components/redirect.svelte';
 		window.closeLoading();
 	}
 
-  function onExportExcel() {
+	function onExportExcel() {
 		let link = `${apiUrl}/purchases/export-excel`;
 		redirect(link);
 	}
@@ -176,7 +177,7 @@ import { redirect } from '$lib/components/redirect.svelte';
 		{filterTime}
 		on:changeCurrentPage={paginationChange}
 		on:search={onSearch}
-    on:create={onExportExcel}
+		on:create={onExportExcel}
 		styleFilter=""
 	>
 		<!-- <div slot="filterHeard">
@@ -220,7 +221,7 @@ import { redirect } from '$lib/components/redirect.svelte';
 				{#if row.report_link === null}
 					Đang xử lý
 				{:else}
-					<a href={`${apiUrl}${row.report_link}`}>Link PDF</a>
+					<a target="_blank" href={getLink(row.report_link)}>Link PDF</a>
 				{/if}
 			{:else}
 				{cell.value}
