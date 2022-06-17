@@ -15,6 +15,7 @@
 	import { getMsgRequired } from '$lib/utils/message';
 	import Image from '$lib/components/ABS/Image.svelte';
 import { backendUrl } from '$lib/env';
+import { getImage } from '$lib/utils/image';
 	const dispatch = createEventDispatcher();
 	export let formData: CategoryFormData;
 	export let title: string;
@@ -111,7 +112,7 @@ import { backendUrl } from '$lib/env';
 									<div class="col-lg-8">
 										<div class="">
 											{#if formData.photo}
-												<Image src={`${backendUrl}${formData.photo}`} />
+												<Image src={getImage(formData.photo) || ''} />
 											{/if}
 											<BaseInput>
 												<input type="file" bind:files={imageInput} />
@@ -127,7 +128,7 @@ import { backendUrl } from '$lib/env';
 									<div class="col-lg-8">
 										<div class="">
 											<BaseCheckbox
-												model={formData.status === STATUS.ACTIVE ? true : false}
+												model={formData.status?.toString() === STATUS.ACTIVE.toString() ? true : false}
 												class="mb-3"
 												on:click={onChangeStatus}
 											/>
