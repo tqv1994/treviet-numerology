@@ -10,9 +10,15 @@
     export { classNames as class };
 	const flatpickrOptions = {
         dateFormat,
+        mode: 'range',
 		enableTime: false,
         allowInput: true,
         locale: Vietnamese
+	};
+
+    let dates = {
+		simple: new Date(),
+		range: '2022-05-22 đến 2022-06-21'
 	};
 
 	function handleChangeDate(event: CustomEvent<[Date, string]>) {
@@ -26,6 +32,8 @@
 	options={flatpickrOptions}
 	class="form-control datepicker bg-white {classNames}"
 	{value}
-    {placeholder}
+    defaultDate={dates.range}
+	placeholder={dates.range}
 	on:change={(event) => handleChangeDate(event)}
+    on:change
 />

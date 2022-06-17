@@ -53,7 +53,7 @@
 	import { formatNewDate } from '$lib/helper/datetime';
 	import { apiUrl } from '$lib/env';
 	import { redirect } from '$lib/components/redirect.svelte';
-import { getLink } from '$lib/utils/link';
+	import { getLink } from '$lib/utils/link';
 
 	export let name = 'Quản trị';
 	export let reportDatas: DataWithPagination<Report>;
@@ -62,7 +62,7 @@ import { getLink } from '$lib/utils/link';
 	export let perPage: number;
 	export let sort: string;
 	export let filter: Record<string, string | number | boolean> = {};
-		
+
 	let filterTime = true;
 	let excelChecked = 'all';
 	let tableColumns: TableColumn[] = [
@@ -105,7 +105,7 @@ import { getLink } from '$lib/utils/link';
 		{
 			prop: 'report_link',
 			label: 'Report link',
-			minWidth: 120,
+			minWidth: 120
 		}
 	];
 
@@ -169,7 +169,7 @@ import { getLink } from '$lib/utils/link';
 	function onExportExcel() {
 		let link = '';
 		if (excelChecked === 'all') {
-			link = `${apiUrl}/reports/export-excel`
+			link = `${apiUrl}/reports/export-excel`;
 		} else {
 			link = `${apiUrl}/reports/export-excel?from_date=${filter.from_date}&to_date=${filter.to_date}`;
 		}
@@ -220,24 +220,24 @@ import { getLink } from '$lib/utils/link';
 	>
 		<div slot="filterRadio" class="mr-5 filter-radio">
 			<label class="">
-				<input 
-					type="radio" 
-					name="radio" 
-					class="custom-radio" 
-					checked={excelChecked==='all'} 
-					on:change={onChangeRadio} 
+				<input
+					type="radio"
+					name="radio"
+					class="custom-radio"
+					checked={excelChecked === 'all'}
+					on:change={onChangeRadio}
 					value="all_agent"
 				/>
 				<span class="checkmark" />
 				Toàn bộ đại lý
 			</label>
 			<label class="ml-3">
-				<input 
-					type="radio" 
-					name="radio" 
-					class="custom-radio" 
-					checked={excelChecked==='time'} 
-					on:change={onChangeRadio} 
+				<input
+					type="radio"
+					name="radio"
+					class="custom-radio"
+					checked={excelChecked === 'time'}
+					on:change={onChangeRadio}
 					value="time"
 				/>
 				<span class="checkmark" />
@@ -271,7 +271,7 @@ import { getLink } from '$lib/utils/link';
 			{:else if cell.key === 'created_at'}
 				{row.created_at ? formatNewDate(row.created_at) : ''}
 			{:else if cell.key === 'report_link'}
-				{#if cell.value !== null} 
+				{#if cell.value !== null}
 					<a target="_blank" href={getLink(cell.value)}>Link PDF</a>
 				{:else}
 					Đang xử lý

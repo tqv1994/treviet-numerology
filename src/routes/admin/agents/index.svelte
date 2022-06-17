@@ -186,7 +186,7 @@
 		let agent = await updateAgentStatus(agent_id);
 		let listAgent = agentDatas.data;
 		listAgent = listAgent?.map((item) => {
-			if (item.id === agent_id) {
+			if (item.id.toString() === agent_id.toString()) {
 				item.status = agent.status;
 			}
 			return item;

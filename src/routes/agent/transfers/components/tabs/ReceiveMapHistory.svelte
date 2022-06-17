@@ -13,6 +13,7 @@
 import { apiUrl } from '$lib/env';
 import { redirect } from '$lib/components/redirect.svelte';
 import Flatpickr from 'svelte-flatpickr';
+import DatePickerRanger from '$lib/components/ABS/Form/DatePickerRanger.svelte';
 
 	export let receiveDatas: DataWithPagination<Purchase>;
   	export let keyword: string;
@@ -76,15 +77,10 @@ import Flatpickr from 'svelte-flatpickr';
 		range: '2022-05-22 12:00 to 2022-06-21 12:00'
 	};
 
-	const flatpickrOptionsRange = {
-		mode: 'range',
-		enableTime: true,
-		onChange: async (selectedDates: Date, dateStr: string, instance: []) => {
-			let keyConnect = ' to ';
-			console.log(dateStr);
-
-			if (dateStr.includes(keyConnect)) {
-				let listDateStr = dateStr.split(' to ');
+	async function onChangeFilterDate(event: CustomEvent<[Date[], string]>) {
+		if (event.detail[1]) {
+			if (event.detail[1].includes(' đến ')) {
+				let listDateStr = event.detail[1].split(' đến ');
 				if (listDateStr.length > 1) {
 					let fromDate = listDateStr[0];
 					let toDate = listDateStr[1];
@@ -94,7 +90,7 @@ import Flatpickr from 'svelte-flatpickr';
 				}
 			}
 		}
-	};
+	}
 
 	export async function getData() {
 		let url = `purchases/filter?filter[agent_id]=${agenId}`
@@ -165,13 +161,7 @@ import Flatpickr from 'svelte-flatpickr';
 				<p class="search-datetime mt-2">Từ:</p>
 				<div class="col-md-9 width-date-picker">
 					<BaseInput>
-						<Flatpickr
-							options={flatpickrOptionsRange}
-							class="form-control datepicker bg-white"
-							defaultDate={dates.range}
-							placeholder={dates.range}
-							dateFormat="Y-m-d"
-						/>
+						<DatePickerRanger value={undefined} on:change={onChangeFilterDate} />
 					</BaseInput>
 				</div>
 			</div>

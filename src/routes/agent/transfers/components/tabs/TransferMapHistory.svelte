@@ -13,19 +13,20 @@
 	import { apiUrl } from '$lib/env';
 	import { redirect } from '$lib/components/redirect.svelte';
 	import Flatpickr from 'svelte-flatpickr';
+	import DatePickerRanger from '$lib/components/ABS/Form/DatePickerRanger.svelte';
 
 	export let transferDatas: DataWithPagination<Transfer>;
 	export let keyword: string;
 	export let currentPage: number;
 	export let props: any;
 	export let filter: Record<string, string | number | boolean> = {};
-	
+
 	let sort: string = '-id';
 	let perPage: number = 10;
 	let agenId: number = props.myAgent.id;
 	let excelChecked = 'all';
-		console.log(filter);
-		
+	console.log(filter);
+
 	onMount(async () => {
 		await getData();
 	});
@@ -77,15 +78,10 @@
 		range: '2022-05-22 12:00 to 2022-06-21 12:00'
 	};
 
-	const flatpickrOptionsRange = {
-		mode: 'range',
-		enableTime: true,
-		onChange: async (selectedDates: Date, dateStr: string, instance: []) => {
-			let keyConnect = ' to ';
-			console.log(dateStr);
-
-			if (dateStr.includes(keyConnect)) {
-				let listDateStr = dateStr.split(' to ');
+	async function onChangeFilterDate(event: CustomEvent<[Date[], string]>) {
+		if (event.detail[1]) {
+			if (event.detail[1].includes(' đến ')) {
+				let listDateStr = event.detail[1].split(' đến ');
 				if (listDateStr.length > 1) {
 					let fromDate = listDateStr[0];
 					let toDate = listDateStr[1];
@@ -95,12 +91,12 @@
 				}
 			}
 		}
-	};
+	}
 
 	export async function getData() {
-		let url = `transfers/filter?filter[agent_id]=${agenId}`
+		let url = `transfers/filter?filter[agent_id]=${agenId}`;
 		if (filter.from_date && filter.to_date) {
-			url += `&filter[from_date]=${filter.from_date}&filter[to_date]=${filter.to_date}`
+			url += `&filter[from_date]=${filter.from_date}&filter[to_date]=${filter.to_date}`;
 		}
 		const res = await pget(
 			`${url}&${objectToQueryString({
@@ -115,7 +111,7 @@
 			console.log(transferDatas);
 		}
 	}
-	
+
 	async function onChangePerPage(event: CustomEvent<number>) {
 		perPage = event.detail;
 		await getData();
@@ -158,7 +154,7 @@
 		on:sort={onSort}
 		on:create={onExportExcel}
 	>
-		<div slot="label-search">	
+		<div slot="label-search">
 			<p class="label-search mt-2 ml-4 mr-4">Search:</p>
 		</div>
 		<div slot="filter-form-content" class="filter-form-content">
@@ -166,31 +162,25 @@
 				<p class="search-datetime mt-2">Từ:</p>
 				<div class="col-md-9 width-date-picker">
 					<BaseInput>
-						<Flatpickr
-							options={flatpickrOptionsRange}
-							class="form-control datepicker bg-white"
-							defaultDate={dates.range}
-							placeholder={dates.range}
-							dateFormat="Y-m-d"
-						/>
+						<DatePickerRanger value={undefined} on:change={onChangeFilterDate} />
 					</BaseInput>
 				</div>
 			</div>
 		</div>
-		
+
 		<div slot="cell" let:row let:cell>
 			{#if cell.key === 'transfer_date'}
 				{row.transfer_date ? row.transfer_date : ''}
 			{:else if cell.key === 'receive_sex'}
-				{row.agent_receive ? row.agent_receive.sex : '' }
-			{:else if cell.key === 'receive_name'} 
-				{row.agent_receive ? row.agent_receive.agentname : '' }
-			{:else if cell.key === 'package_name'} 
-				{row.transfer_details[0].package ? row.transfer_details[0].package.package_name : '' }
-			{:else if cell.key === 'receive_phone'} 
-				{row.agent_receive ? row.agent_receive.phone : '' }
-			{:else if cell.key === 'receive_email'} 
-				{row.agent_receive ? row.agent_receive.email : '' }
+				{row.agent_receive ? row.agent_receive.sex : ''}
+			{:else if cell.key === 'receive_name'}
+				{row.agent_receive ? row.agent_receive.agentname : ''}
+			{:else if cell.key === 'package_name'}
+				{row.transfer_details[0].package ? row.transfer_details[0].package.package_name : ''}
+			{:else if cell.key === 'receive_phone'}
+				{row.agent_receive ? row.agent_receive.phone : ''}
+			{:else if cell.key === 'receive_email'}
+				{row.agent_receive ? row.agent_receive.email : ''}
 			{:else}
 				{cell.value}
 			{/if}

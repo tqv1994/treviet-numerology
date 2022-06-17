@@ -136,10 +136,10 @@
 					Hệ thống đại lý
 					<button class="badge-pill {!toggleSystemTree ? 'badge-success' : ''} badge ml-4" on:click={()=>{
 						toggleSystemTree = false;
-					}}>Close All</button>
+					}}>Đóng tất cả</button>
 					<button class="badge-pill badge {toggleSystemTree ? 'badge-success' : ''}" on:click={()=>{
 						toggleSystemTree = true;
-					}}>Open All</button>
+					}}>Mở tất cả</button>
 				</h3>
 				<!-- Card body -->
 				<Folder
