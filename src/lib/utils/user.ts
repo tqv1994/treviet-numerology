@@ -1,6 +1,7 @@
 import { backendUrl, frontendUrl } from '$lib/env';
 import type { Agent } from '$lib/stores/agent';
 import type { User } from '$lib/stores/auth';
+import type { Package } from '$lib/stores/package';
 
 export function logout() {
 	localStorage.removeItem('token');
@@ -85,8 +86,16 @@ export function checkRole(name: string, user?: User): boolean {
 	return false;
 }
 
-export function getAgentPackageColor(packages: [], amount: number): string {
-	let reversePackages = packages;
-	let color = reversePackages.find(item => item.amount >= amount);
-	return color.color
+export function getAgentPackageColor(packages: Package[], amount: number): string {
+	let color = packages.find(item => item.amount >= amount);	
+	console.log("color", color);
+	
+	return color.color;
+}
+
+export function getAgentPackageName(packages: [], amount: number): string {
+	let packageName = packages.find(item => item.amount >= amount);
+	console.log("package", packageName);
+	
+	return packageName.package_name;
 }

@@ -3,6 +3,7 @@
 		const myAgent = getMyAgent(session.user);
 		let myChildAgents: AgentTreeView[] = [];
 		let treeViews: AgentTreeView[] = [];
+
 		if (myAgent) {
 			if (myAgent.ref_code_agent !== null) {
 				return redirectAgent('/transfers');
@@ -11,8 +12,10 @@
 				const res = await fetch(`/p/tree-view/${myAgent.id}`);
 				if (res.ok) {
 					const data: { results: AgentTreeView[] } = await res.json();
+					console.log(data);
 					treeViews = data.results;
 					myChildAgents = (data.results || []).filter((item) => item.id !== myAgent.id);
+					
 				} else {
 					const err = await res.json();
 					console.error(err);
@@ -45,20 +48,17 @@
 	import Folder from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
 	import TransferMapHistory from './components/tabs/TransferMapHistory.svelte';
 	import { getMyAgent, getReferralLink } from '$lib/utils/user';
-	import { packagesStore } from '$lib/stores/package';
+	import { authStore } from '$lib/stores/auth';
+	import { formatDate } from '$lib/helper/datetime';
+	import { packagesAllStore, packagesStore, type Package } from '$lib/stores/package';
 	import CreateTranfer from './components/tabs/createTranfer.svelte';
 	import { redirectAgent } from '$lib/components/redirect.svelte';
-	import { authStore } from '$lib/stores/auth';
 
 	export let myChildAgents: AgentTreeView[];
 	export let treeViews: AgentTreeView[];
 	export let myAgent: {};
-	let packages = $packagesStore;
-	let listColor = convertListColor(packages);
+
 	let toggleSystemTree: boolean = false;
-	function convertListColor(packages) {
-		return packages.map((item) => item.color).reverse();
-	}
 
 	let tabs: Tab[] = [
 		{
@@ -70,6 +70,9 @@
 		{ id: 2, name: 'Lịch sử nhận MAP', component: ReceiveMapHistory, prop: { myAgent: myAgent } },
 		{ id: 3, name: 'Lịch sử chuyển MAP', component: TransferMapHistory, prop: { myAgent: myAgent } }
 	];
+
+	console.log($packagesStore);
+	
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -144,7 +147,7 @@
 					agentTreeViews={treeViews}
 					ref_code={null}
 					role="member"
-					colors={listColor}
+					packages={$packagesAllStore}
 				/>
 			</Card>
 			<!-- Input groups -->

@@ -1,27 +1,19 @@
 <script lang="ts" context="module">
-	export const load: Load = async ({ fetch, session, url }) => {
+	export const load: Load = async ({ fetch }) => {
 		let packageDatas: DataTableAgenctLevel[] | undefined;
-		const myAgent = getMyAgent(session.user);
 		let treeViews: DataTableAgentList[];
-		let role = session.user.roles[0].name;
 		const res = await fetch(`/p/packages`);
+		const resTree = await fetch(`/p/tree-view`);
+    
+    if (resTree.ok) {
+      const data = await resTree.json();
+      treeViews = data.results;
+    } 
+    else {
+      const err = await resTree.json();
+      console.error(err);
+    }
 		
-		if (myAgent) {
-			try {
-				const res = await fetch(`/p/tree-view/${myAgent.id}`);
-
-				if (res.ok) {
-					const data = await res.json();
-					treeViews = data.results;
-					console.log("data", treeViews);
-				} else {
-					const err = await res.json();
-					console.error(err);
-				}
-			} catch (error) {
-				console.log(error);
-			}
-		}
 		if (res.ok) {
 			const data = await res.json();
 			
@@ -50,19 +42,27 @@
     // Tables
     export let name = "Trang chủ";
     import { onMount } from 'svelte';
-	import AgentList from '$lib/components/ABS/Agent/AgentList.svelte';
-	import type { DataTableAgentList } from '$lib/components/ABS/Agent/AgentList.svelte';
-	import AgentLevelTable from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
-	import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
-	import type { Load } from "@sveltejs/kit";
-  import type { Agent, AgentTreeView } from "$lib/stores/agent";
-  import { getMyAgent } from '$lib/utils/user';
-	export let myAgent: Agent;
-	export let role: string;
+    import AgentList from '$lib/components/ABS/Agent/AgentList.svelte';
+    import type { DataTableAgentList } from '$lib/components/ABS/Agent/AgentList.svelte';
+    import AgentLevelTable from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
+    import type { DataTableAgenctLevel } from '$lib/components/ABS/Agent/AgentLevelTable.svelte';
+    import type { Load } from "@sveltejs/kit";
+    import type { Agent, AgentTreeView } from "$lib/stores/agent";
+    import { packagesStore } from "$lib/stores/package";
 
-	export let treeViews: DataTableAgentList[];
-	export let packageDatas: DataTableAgenctLevel[];
-	
+    export let treeViews: DataTableAgentList[];
+    console.log('treeViews',treeViews);
+    
+    export let packageDatas: DataTableAgenctLevel[];
+
+    let sum = 0;
+    for (let i = 0; i < treeViews.length; i++) {
+      sum += treeViews[i].doanhso;
+    }
+    let sumRevenueAgent = sum;
+    export let sumAgent = treeViews.length;
+
+    
   </script>
   
   <div transition:fade={{ duration: 250 }}>
@@ -95,7 +95,7 @@
           <StatsCard
             title="Doanh số đại lý tháng"
             type="gradient-info"
-            subTitle="50"
+            subTitle="{sumRevenueAgent}"
             icon="ni ni-chart-bar-32"
             bodyClasses="bg-revenue-agent">
             <div slot="footer">
@@ -109,7 +109,7 @@
           <StatsCard
             title="Tổng số đại lý trực thuộc"
             type="gradient-info"
-            subTitle="2000"
+            subTitle="{sumAgent}"
             icon="ni ni-chart-pie-35"
             bodyClasses="bg-sum-agent">
             <div slot="footer">
@@ -141,7 +141,7 @@
 		<!--Tables-->
 		<div class="row">
 			<div class="col-xl-8">
-				<AgentList tableData={treeViews} />
+				<AgentList tableData={treeViews} packages={$packagesStore}/>
 			</div>
 			<div class="col-xl-4">
 				<AgentLevelTable tableData={packageDatas} />

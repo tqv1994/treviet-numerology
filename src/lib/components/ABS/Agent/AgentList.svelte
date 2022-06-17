@@ -5,13 +5,11 @@
 		level: string;
 		doanhso: string;
 	};
-
 </script>
 
 <script lang="ts">
 	export let tableData: DataTableAgentList[] = [];
-	export let packages: [];
-	console.log(packages);
+	export let packages: Package[];
 	
 	import { onMount } from 'svelte';
 	import jQuery from 'jquery';
@@ -19,7 +17,8 @@
 	import dtCss from 'datatables.net-dt';
 	import Card from '$lib/components/Cards/Card.svelte';
 	import BaseProgress from '$lib/components/BaseProgress.svelte';
-	import { getAgentPackageColor } from '$lib/utils/user';
+	import { getAgentPackageColor, getAgentPackageName } from '$lib/utils/user';
+	import { packagesAllStore, packagesStore, type Package } from '$lib/stores/package';
 
 	let tableElement;
 	onMount(() => {
@@ -34,6 +33,9 @@
 			responsive: true
 		});
 	});
+
+	console.log($packagesStore);
+	
 </script>
 
 <Card bodyClasses="p-0" headerClass="border-0">
@@ -108,7 +110,7 @@
 					</td>
 
 					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;{`color: #${getAgentPackageColor(packages, element.amount)}`}">
-						Level {element.level} 
+						{getAgentPackageName(packages, element.amount)} 
 					</td>
 					<!-- <td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
 						<div class="d-flex align-items-center">

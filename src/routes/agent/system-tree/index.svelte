@@ -36,19 +36,10 @@
 	import Folder from '$lib/components/ABS/Global/SystemTree/Folder.svelte';
 	import { getMyAgent } from '$lib/utils/user';
 	import type { Agent, AgentTreeView } from '$lib/stores/agent';
-	import { packagesStore } from '$lib/stores/package';
+	import { packagesAllStore, packagesStore } from '$lib/stores/package';
 	export let myAgent: Agent;
 	export let treeViews: AgentTreeView[];
 	export let role: string;
-
-	console.log(treeViews);
-	
-	let packages = $packagesStore;
-	let listColor = convertListColor(packages);
-	
-	function convertListColor(packages) {
-		return packages.map(item => item.color).reverse();
-	}
 </script>
 
 <div transition:fade={{ duration: 250 }}>
@@ -80,7 +71,7 @@
 								ref_code={myAgent.ref_code_agent}
 								expanded={true}
 								role={role}
-								colors={listColor}
+								packages={$packagesAllStore}
 							/>
 						{/if}
 					</Card>

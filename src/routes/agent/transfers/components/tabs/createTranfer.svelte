@@ -41,7 +41,7 @@
 			package_id: undefined,
 			agent_receive_id: undefined,
 			one_time_password: '',
-			transfer_date: formatDate(new Date(), 'yyyy-mm-dd')
+			transfer_date: formatDate(new Date())
 		};
 	}
 

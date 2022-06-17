@@ -13,8 +13,6 @@
 				
 				if (res.ok) {
 					const data = await res.json();
-					console.log("data", data);
-
 					const imageQR = data['QR-image'];
 					session.user.imageQR = imageQR;
 					authStore.update((s) => {
@@ -27,7 +25,7 @@
 			}
 		}
 
-		const resTree = await fetch(`/p/tree-view/${session.user.id}`);
+		const resTree = await fetch(`/p/tree-view`);
 		const resAgents = await fetch(`/p/agents/filter?filter[level]=1`);
 
 		if (resTree.ok) {
@@ -67,7 +65,7 @@
 	import type { Tab } from '$lib/components/ABS/Tab/Tabs.svelte';
 	import type { Load } from '@sveltejs/kit';
 	import type { AgentTreeView } from '$lib/stores/agent';
-	import { packagesStore } from '$lib/stores/package';
+	import { packagesStore, type Package } from '$lib/stores/package';
 	import CreateTranfer from './components/tabs/createTranfer.svelte';
 	import { authStore } from '$lib/stores/auth';
 
@@ -75,8 +73,6 @@
 	export let userId: number;
 	export let agentsLevel1: [];
 		
-	let packages = $packagesStore;
-	let listColor = convertListColor(packages);
 	let tabs: Tab[] = [
 		{
 			id: 1,
@@ -92,11 +88,6 @@
 			} 
 		}
 	];
-
-	function convertListColor(packages) {
-		return packages.map(item => item.color).reverse();
-	}
-
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -124,7 +115,7 @@
 									<span class=" badge-pill badge-success badge ml-4">Close All</span>
 									<span class=" badge-pill badge-success badge">Open All</span>
 								</div>
-								<Folder expanded={true} agentTreeViews={treeViews} ref_code={null} colors={listColor}/>
+								<Folder expanded={true} agentTreeViews={treeViews} ref_code={null} packages={$packagesStore}/>
 							</div>
 						</div>
 					</div>

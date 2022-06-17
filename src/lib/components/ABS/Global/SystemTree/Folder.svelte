@@ -29,18 +29,19 @@
 </script>
 
 <script lang="ts">
-	import SideBarItem from '$lib/components/SidebarPlugin/SideBarItem.svelte';
-
 	import type { AgentTreeView } from '$lib/stores/agent';
+	import type { Package } from '$lib/stores/package';
+	import { getAgentPackageColor } from '$lib/utils/user';
+
 
 	export let expanded: boolean = false;
-	let trees: AgentTreeView[];
 	export let agentTreeViews: AgentTreeView[];
 	export let ref_code: string | null;
-	let name: string;
 	export let role: string;
+	export let packages:  Package[];
+
+	let trees: AgentTreeView[];
 	let limit_level: number | null;
-	export let colors: [] = [];
 
 	$: if (agentTreeViews && agentTreeViews.length > 0) {
 		if (role === 'member') {
@@ -54,7 +55,8 @@
 	}
 
 	function getType(agent: AgentTreeView) {
-		const color = colors.find((item, index) => agent.level == index);
+		let amount = agent.amount;
+		let color = getAgentPackageColor(packages, amount)
 		return color;
 	}
 </script>
@@ -90,7 +92,7 @@
 								ref_code={tree.ref_code_owner}
 								expanded={true}
 								{role}
-								{colors}
+								{packages}
 							/>
 						{/if}
 					{:else}

@@ -4,15 +4,17 @@
 	import { formatDate } from '$lib/helper/datetime';
 	import { packagesStore } from '$lib/stores/package';
 	import { ppost } from '$lib/utils/fetch';
-	import type { Load } from '@sveltejs/kit';
 	import { getErrorMessage } from '$lib/utils/response';
 	import { isReloadTab } from '$lib/components/ABS/Tab/Tabs.svelte';
 	import * as yup from 'yup';
 	import { getMsgRequired } from '$lib/utils/message';
-	import type { Purchase, PurchaseFormData } from '$lib/stores/purchase';
-	import { authStore, type User } from '$lib/stores/auth';
-	export let status: false;
+	import type { PurchaseFormData } from '$lib/stores/purchase';
+	import { authStore } from '$lib/stores/auth';
+	import type { Agent } from '$lib/stores/agent';
+
+	export let status: boolean = false;
 	export let hidden: string = '' ;
+	export let agentsLevel1: Agent[];
 	
 	let errors: any = {};
 	const schemaValidator = yup.object().shape({
@@ -28,7 +30,6 @@
 	});
 
 	let formData: PurchaseFormData	 = reset();
-	export let agentsLevel1: [];
 	function reset(): PurchaseFormData {
 		return {
 			agent_id:  undefined,
@@ -132,17 +133,17 @@
 				<div class="col-lg-8">
 					<div class="">
 						<BaseInput error={errors.one_time_password} placeholder="Nhập mã 2FA" bind:value={formData.one_time_password} />
-						{#if ($authStore.google2fa_secret === null) || ($authStore.google2fa_secret ==='')}
-										<div class='row mt--3'>
-											<p class='label-link-2fa text-left col-6'>* Bạn chưa có mã 2FA</p>
-											<a href="/admin/profile" class='text-right link-create-2fa col-6'>Tạo mã 2FA ngay</a>
-										</div>
-										{:else}
-										<span on:click={show2FA} {hidden} class="get-image-2fa">Lấy mã 2FA ngay</span>
-											{#if (status == true)}
-											{@html $authStore.imageQR}
-											{/if}
-										{/if}
+							{#if ($authStore.google2fa_secret === null) || ($authStore.google2fa_secret ==='')}
+								<div class='row mt--3'>
+									<p class='label-link-2fa text-left col-6'>* Bạn chưa có mã 2FA</p>
+									<a href="/admin/profile" class='text-right link-create-2fa col-6'>Tạo mã 2FA ngay</a>
+								</div>
+							{:else}
+								<span on:click={show2FA} {hidden} class="get-image-2fa">Lấy mã 2FA ngay</span>
+								{#if (status == true)}
+									{@html $authStore.imageQR}
+								{/if}
+							{/if}
 					</div>
 				</div>
 			</div>

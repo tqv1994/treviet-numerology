@@ -21,3 +21,5 @@ export type PackageFormData = {
 }
 
 export const packagesStore = writable<Package[]>([]);
+
+export const packagesAllStore = writable<Package[]>([]);

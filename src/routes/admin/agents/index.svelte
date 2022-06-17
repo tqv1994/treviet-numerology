@@ -50,7 +50,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import BaseHeader from '$lib/components/BaseHeader.svelte';
-	import { onMount } from 'svelte';
 	import type { DataWithPagination } from '$lib/stores/type';
 	import Table from '$lib/components/ABS/Global/Datatable/Table.svelte';
 	import type { TableColumn } from '$lib/components/ABS/Global/Datatable/Table.svelte';
@@ -60,7 +59,6 @@
 	import type { Agent, AgentTreeView } from '$lib/stores/agent';
 	import {
 		getListAgentsService,
-		getListFilterDateAgentService,
 		updateAgentStatus
 	} from '$lib/services/agent.service';
 	import type { Load } from '@sveltejs/kit';
@@ -81,8 +79,6 @@
 	export let filter: Record<string, string | number | boolean> = {};
 
 	let filterTime = true;
-	let packages = $packagesStore;
-	let listColor = convertListColor(packages);
 	let excelChecked = 'all';
 	
 	let tableColumns: TableColumn[] = [
@@ -208,10 +204,6 @@
 		await getData();
 	}
 
-	function convertListColor(packages) {
-		return packages.map(item => item.color).reverse();
-	}
-
 	function onExportExcel() {
 		let link = '';
 		if (excelChecked === 'all') {
@@ -227,10 +219,7 @@
 
 	function onChangeRadio(event) {
 		excelChecked = event.currentTarget.value;
-	}	
-
-	console.log(getAgentPackageColor(packages, 1000));
-	
+	}		
 </script>
 
 <div class="content" transition:fade={{ duration: 250 }}>
@@ -261,7 +250,7 @@
 				</h3>
 				<!-- Card body -->
 				<div class="mt-3" style="color:mediumvioletred">
-					<Folder expanded={false} agentTreeViews={treeViews} ref_code={null} colors={listColor}/>
+					<Folder expanded={false} agentTreeViews={treeViews} ref_code={null} packages={$packagesStore}/>
 				</div>
 			</Card>
 			<!-- Input groups -->
@@ -328,7 +317,7 @@
 				<div class="col-md-3" />
 			</div>
 		</div>
-		<div slot="cell" let:row let:cell style={`color: #${getAgentPackageColor(packages, row.amount)}`}>
+		<div slot="cell" let:row let:cell style={`color: #${getAgentPackageColor($packagesStore, row.amount)}`}>
 			{#if cell.key === 'username'}
 				{row.user ? row.user.name : ''}
 			{:else if cell.key === 'action'}

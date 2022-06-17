@@ -52,6 +52,7 @@
 	import type { Load } from '@sveltejs/kit';
 	import { getMyAgent } from '$lib/utils/user';
 	import type { Agent, AgentTreeView } from '$lib/stores/agent';
+import { packagesAllStore } from '$lib/stores/package';
 	export let myAgent: Agent;
 	export let role: string;
 
@@ -325,7 +326,7 @@
 		<!--Tables-->
 		<div class="row">
 			<div class="col-xl-8">
-				<AgentList tableData={treeViews} packages={packageDatas.reverse()} />
+				<AgentList tableData={treeViews} packages={$packagesAllStore} />
 			</div>
 			<div class="col-xl-4">
 				<AgentLevelTable tableData={packageDatas} />
