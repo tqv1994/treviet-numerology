@@ -247,7 +247,7 @@
 				</div>
 			{:else if cell.key === 'status'}
 				<Badge className="badge-dot mr-4">
-					<i class={`bg-${cell.value === STATUS.ACTIVE ? 'success' : 'danger'}`} />
+					<i class={`bg-${cell.value == STATUS.ACTIVE ? 'success' : 'danger'}`} />
 					<span class="status">{STATUS_LABEL[cell.value]}</span>
 				</Badge>
 			{:else if cell.key === 'category_id'}

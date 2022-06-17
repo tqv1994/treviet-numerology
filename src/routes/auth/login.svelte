@@ -14,10 +14,20 @@
 	import { redirect } from '$lib/components/redirect.svelte';
 	import { appName } from '$lib/env';
 	import { getErrorMessage } from '$lib/utils/response';
+	import * as yup from 'yup';
+	import { getMsgRequired } from '$lib/utils/message';
 	let formData: LoginForm = {
 		email: '',
 		password: ''
 	};
+	let errors: any = {};
+	const schemaValidator = yup.object().shape({
+		email: yup.string().typeError(getMsgRequired('Email')).required(getMsgRequired('Email')),
+		password: yup
+			.string()
+			.typeError(getMsgRequired('Mật khẩu'))
+			.required(getMsgRequired('Mật khẩu'))
+	});
 	reset();
 	function reset() {
 		formData = {
@@ -28,6 +38,7 @@
 	const handleSubmit = async () => {
 		window.openLoading();
 		try {
+			await schemaValidator.validate({ ...formData }, { abortEarly: false });
 			const res = await ppost('login', {
 				...formData
 			});
@@ -57,10 +68,16 @@
 			window.location.href = '/';
 			// redirect('/');
 		} catch (err) {
-			window.notice({
-				text: err,
-				type: 'danger'
-			});
+			if (err.inner) {
+				errors = err.inner.reduce((acc, err) => {
+					return { ...acc, [err.path]: err.message };
+				}, {});
+			} else {
+				window.notice({
+					text: err,
+					type: 'danger'
+				});
+			}
 		}
 		window.closeLoading();
 	};
@@ -77,8 +94,8 @@
 			name="Email"
 			prependIcon="ni ni-email-83"
 			placeholder="Email hoặc Username"
-			required
 			bind:value={formData.email}
+			error={errors.email}
 		/>
 		<BaseInput
 			alternative
@@ -87,8 +104,8 @@
 			prependIcon="ni ni-lock-circle-open"
 			type="password"
 			placeholder="Mật khẩu"
-			required
 			bind:value={formData.password}
+			error={errors.password}
 		/>
 
 		<BaseCheckbox model="agree">
@@ -105,10 +122,8 @@
 				được hỗ trợ
 			</p>
 		</div>
-		<div class="text-right policy-agent" >
-			<a href="/policy">
-				Điều khoản đại lý
-			</a>
+		<div class="text-right policy-agent">
+			<a href="/policy"> Điều khoản đại lý </a>
 		</div>
 	</form>
 	<div slot="footer">
@@ -121,10 +136,11 @@
 			<div class="col-6 text-right" />
 		</div>
 	</div>
-</Auth>
+</Auth>z
+
 <style language="scss">
- .policy-agent{
-	font-size: 14px;
-	text-decoration: underline;
- }
-</style>z
+	.policy-agent {
+		font-size: 14px;
+		text-decoration: underline;
+	}
+</style>

@@ -16,6 +16,7 @@
 	import { getMsgRequired } from '$lib/utils/message';
 	import type { SwalResult } from '$lib/utils/swal';
 	import Swal from 'sweetalert2/dist/sweetalert2.js';
+	import DatePicker from '$lib/components/ABS/Form/DatePicker.svelte';
 	let errors: any = {};
 	const schemaValidator = yup.object().shape({
 		name: yup.string().typeError(getMsgRequired('Họ tên')).required(getMsgRequired('Họ tên')),
@@ -35,10 +36,10 @@
 			.required(getMsgRequired('Mã 2FA'))
 	});
 
-	let formData: ReportFormData;
-	reset();
+	let formData: ReportFormData = reset();
+	
 	function reset() {
-		formData = {
+		return {
 			name: '',
 			dob: '',
 			phone: '',
@@ -47,16 +48,6 @@
 			one_time_password: '',
 			initials: '1'
 		};
-	}
-	const flatpickrOptions = {
-		enableTime: false,
-		onChange: (selectedDates, dateStr, instance) => {}
-	};
-
-	function handleChangeDOB(event: CustomEvent<[Date, string]>) {
-		if (event.detail[1]) {
-			formData.dob = event.detail[1];
-		}
 	}
 
 	let suffix = false;
@@ -85,7 +76,7 @@
 						text: 'Tạo báo cáo thành công',
 						type: 'success'
 					});
-					reset();
+					formData = reset();
 					redirectAgent('/reports');
 				} else {
 					const error = await res.json();
@@ -175,14 +166,7 @@
 									<div class="col-lg-8">
 										<div class="">
 											<BaseInput appendIcon="fas fa-calendar" error={errors.dob}>
-												<Flatpickr
-													options={flatpickrOptions}
-													class="form-control datepicker bg-white"
-													value={formData.dob}
-													dateFormat="Y-m-d"
-													placeholder="01/01/2022"
-													on:change={(event) => handleChangeDOB(event)}
-												/>
+												<DatePicker bind:value={formData.dob} />
 											</BaseInput>
 										</div>
 									</div>
