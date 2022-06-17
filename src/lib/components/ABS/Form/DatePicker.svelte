@@ -9,7 +9,8 @@
     export { classNames as class };
 	const flatpickrOptions = {
         dateFormat,
-		enableTime: false
+		enableTime: false,
+        allowInput: true
 	};
 
 	function handleChangeDate(event: CustomEvent<[Date, string]>) {

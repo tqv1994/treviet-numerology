@@ -10,6 +10,7 @@
 	import 'flatpickr/dist/themes/light.css';
 	import * as yup from 'yup';
 	import { getMsgRequired } from '$lib/utils/message';
+import DatePicker from '$lib/components/ABS/Form/DatePicker.svelte';
 	let errors: any = {};
 	let avatarInput: FileList;
 	let formData: UserDetailBase;
@@ -166,16 +167,8 @@
 					label="Ngày sinh*"
 					error={errors.dob || ''}
 					bind:value={formData.dob}
-					required
 				>
-					<Flatpickr
-						options={flatpickrOptions}
-						class="form-control datepicker bg-white"
-						value={formData.dob}
-						dateFormat="d/m/Y"
-						placeholder="01/01/2022"
-						on:change={handleChangeDOB}
-					/>
+					<DatePicker bind:value={formData.dob} />
 				</BaseInput>
 			</div>
 			<div class="col-lg-6">
