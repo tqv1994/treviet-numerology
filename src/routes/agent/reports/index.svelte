@@ -140,12 +140,21 @@
 	async function createReReport(report: Report) {
 		window.openLoading();
 		const rest = await pget(`reports/re-create/${report.id}`);
-		if(rest.ok){
+		if (rest.ok) {
 			window.notice({
 				text: `Tạo lại báo cáo cho ${report.name} thành công`,
 				type: 'success'
 			});
-		}else{
+			const data = await rest.json();
+			if (reportDatas && data.result) {
+				reportDatas.data = reportDatas.data?.map((item) => {
+					if(item.id.toString() === report.id.toString()){
+						item.report_link = data.result.report_link;
+					}
+					return item;
+				});
+			}
+		} else {
 			const error = await rest.json();
 			window.notice({
 				text: getErrorMessage(error.errors),
@@ -200,14 +209,35 @@
 				</Badge>
 			{:else if cell.key === 'action'}
 				{#if row.report_link}
-					<a href="{getImage(row.report_link)}" class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="top" title="Tải file pdf" data-original-title="Tải file pdf"><i class="ni ni-cloud-download-95"></i></a>
+					<a
+						href={getImage(row.report_link)}
+						class="btn btn-success btn-sm"
+						data-toggle="tooltip"
+						data-placement="top"
+						title="Tải file pdf"
+						data-original-title="Tải file pdf"><i class="ni ni-cloud-download-95" /></a
+					>
 				{:else}
-					<button disabled class="btn btn-default btn-sm" data-toggle="tooltip"
-					data-placement="top"
-					title="File pdf chưa khả dụng để tải"
-					data-original-title="File pdf chưa khả dụng để tải"><i class="ni ni-cloud-download-95"></i></button>
+					<button
+						disabled
+						class="btn btn-default btn-sm"
+						data-toggle="tooltip"
+						data-placement="top"
+						title="File pdf chưa khả dụng để tải"
+						data-original-title="File pdf chưa khả dụng để tải"
+						><i class="ni ni-cloud-download-95" /></button
+					>
 				{/if}
-				<button on:click={()=>{createReReport(row)}} class="btn btn-warning btn-sm" data-toggle="tooltip" data-placement="top" title="Tạo lại báo cáo" data-original-title="Tạo lại báo cáo"><i class="ni ni-curved-next"></i></button>
+				<button
+					on:click={() => {
+						createReReport(row);
+					}}
+					class="btn btn-warning btn-sm"
+					data-toggle="tooltip"
+					data-placement="top"
+					title="Tạo lại báo cáo"
+					data-original-title="Tạo lại báo cáo"><i class="ni ni-curved-next" /></button
+				>
 			{:else}
 				{cell.value}
 			{/if}
