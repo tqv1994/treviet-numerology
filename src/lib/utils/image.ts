@@ -2,6 +2,7 @@ import { backendUrl } from '$lib/env';
 
 export function getImage(path: string | undefined): string | null {
 	if (path) {
+		console.log(path)
 		let backendDomain = backendUrl.replace("https://","");
 		backendDomain = backendDomain.replace("http://","");
 		if(path.includes(backendDomain)){

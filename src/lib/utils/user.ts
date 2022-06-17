@@ -86,16 +86,14 @@ export function checkRole(name: string, user?: User): boolean {
 	return false;
 }
 
-export function getAgentPackageColor(packages: Package[], amount: number): string {
-	let color = packages.find(item => item.amount >= amount);	
-	console.log("color", color);
+export function getAgentPackageColor(packages: Package[], amount: number): string | null {
+	const color = packages.find(item => item.amount >= amount);
 	
-	return color.color;
+	return color?.color || null;
 }
 
-export function getAgentPackageName(packages: [], amount: number): string {
-	let packageName = packages.find(item => item.amount >= amount);
-	console.log("package", packageName);
+export function getAgentPackageName(packages: Package[], amount: number): string | null {
+	const packageName = packages.find(item => item.amount >= amount);
 	
-	return packageName.package_name;
+	return packageName?.package_name || null;
 }
