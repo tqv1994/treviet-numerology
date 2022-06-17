@@ -96,7 +96,7 @@ import { getImage } from '$lib/utils/image';
 											<BaseInput error={errors.category_id}>
 												<select class="form-control" bind:value={formData.category_id}>
 													{#each $categoriesStore || [] as item}
-														<option value={item.id}>{item.cat_name}</option>
+														<option value={`${item.id}`}>{item.cat_name}</option>
 													{/each}
 												</select>
 											</BaseInput>

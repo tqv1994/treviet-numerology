@@ -164,7 +164,7 @@
 
 	function getCategoryName(number: CategoryNumber) {
 		if (number.category_id) {
-			const category = $categoriesStore.find((item) => item.id === number.category_id);
+			const category = $categoriesStore.find((item) => item.id.toString() === number.category_id.toString());
 			if (category) {
 				return category.cat_name;
 			}
