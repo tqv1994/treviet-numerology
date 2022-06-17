@@ -150,6 +150,7 @@
 				reportDatas.data = reportDatas.data?.map((item) => {
 					if(item.id.toString() === report.id.toString()){
 						item.report_link = data.result.report_link;
+						item.status = data.result.status;
 					}
 					return item;
 				});
@@ -204,12 +205,13 @@
 				{cell.value ? formatDate(cell.value, 'dd/mm/yyyy') : ''}
 			{:else if cell.key === 'status'}
 				<Badge className="badge-dot mr-4">
-					<i class={`bg-${cell.value === REPORT_STATUS ? 'success' : 'danger'}`} />
+					<i class={`bg-${cell.value.toString() === REPORT_STATUS.STATUS_ACTIVE.toString() ? 'success' : 'danger'}`} />
 					<span class="status">{getReportStatusItems(cell.value)}</span>
 				</Badge>
 			{:else if cell.key === 'action'}
 				{#if row.report_link}
 					<a
+						target="_blank"
 						href={getImage(row.report_link)}
 						class="btn btn-success btn-sm"
 						data-toggle="tooltip"
