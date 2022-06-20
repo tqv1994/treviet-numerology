@@ -11,7 +11,7 @@
 		}
 		
 		if (!session.user || !myAgent) {
-			return redirect('/');
+			redirect('/');
 		}
 		return {
 			props: {

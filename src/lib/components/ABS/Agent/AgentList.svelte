@@ -3,7 +3,7 @@
 		agentname: string;
 		created_at: string; 
 		level: string;
-		revenue: string;
+		doanhso: string;
 	};
 </script>
 
@@ -106,7 +106,7 @@
 					</td>
 
 					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;">
-						{element.revenue}
+						{element.doanhso}
 					</td>
 
 					<td colspan="1" rowspan="1" style="min-width: 150px; width: 20%;{`color: #${getAgentPackageColor(packages, element.amount)}`}">
