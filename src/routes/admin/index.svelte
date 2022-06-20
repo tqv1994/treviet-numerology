@@ -2,9 +2,20 @@
 	export const load: Load = async ({ fetch }) => {
 		let packageDatas: DataTableAgenctLevel[] | undefined;
 		let treeViews: DataTableAgentList[];
+    let revenueDatas:[];
 		const res = await fetch(`/p/packages`);
 		const resTree = await fetch(`/p/tree-view`);
-    
+    const resRevenue = await fetch(`/p/revenue-month`);
+    console.log("resRevenue",resRevenue);
+
+    if (resRevenue.ok) {
+      const data = await resRevenue.json();
+      revenueDatas = data.results;
+    } 
+    else {
+      const err = await resTree.json();
+      console.error(err);
+    }
     if (resTree.ok) {
       const data = await resTree.json();
       treeViews = data.results;
@@ -25,7 +36,8 @@
 		return {
 			props: {
 				packageDatas,
-				treeViews
+				treeViews,
+        revenueDatas
 			}
 		};
 	};
@@ -54,10 +66,11 @@
     console.log('treeViews',treeViews);
     
     export let packageDatas: DataTableAgenctLevel[];
+    export let revenueDatas: [];
 
     let sum = 0;
-    for (let i = 0; i < treeViews.length; i++) {
-      sum += treeViews[i].doanhso;
+    for (let i = 0; i < revenueDatas.length; i++) {
+      sum += revenueDatas[i].revenue;
     }
     let sumRevenueAgent = sum;
     export let sumAgent = treeViews.length;

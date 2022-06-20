@@ -12,7 +12,7 @@
 			console.error(err);
 		}
 		if (!session.user || myAgent) {
-			redirect('/');
+			return redirect('/');
 		}
 		return {
 			props: {

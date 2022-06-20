@@ -1,38 +1,63 @@
 <script lang="ts" context="module">
-	export const load: Load = async ({ fetch, session, url }) => {
-		let packageDatas: DataTableAgenctLevel[] | undefined;
-		const myAgent = getMyAgent(session.user);
-		let treeViews: DataTableAgentList[];
-		const res = await fetch(`/p/packages`);
-		if (myAgent) {
-			try {
-				const res = await fetch(`/p/tree-view/${myAgent.id}`);
-				if (res.ok) {
-					const data = await res.json();
-					treeViews = data.results;
-				} else {
-					const err = await res.json();
-					console.error(err);
-				}
-			} catch (error) {
-				console.log(error);
-			}
-		}
-		if (res.ok) {
-			const data = await res.json();
+	export const load: Load = async ({ fetch,session }) => {
+	
+	let thisUserId = session.user.id;
 
-			packageDatas = data.results.data;
-		} else {
-			const err = await res.json();
-			console.error(err);
+	let packageDatas: DataTableAgenctLevel[] | undefined;
+	let treeViews: DataTableAgentList[];
+    let revenueDatas:[];
+	let resRevenuePersonalDatas:[];
+	const res = await fetch(`/p/packages`);
+	const resTree = await fetch(`/p/tree-view`);
+    const resRevenue = await fetch(`/p/revenue-month`);
+	const resRevenuePersonal = await fetch(`/p/revenue/${thisUserId}`);
+	
+    
+
+	if (resRevenuePersonal.ok) {
+      const data = await resRevenuePersonal.json();
+      resRevenuePersonalDatas = data;
+	  console.log("data",resRevenuePersonalDatas.revenue);
+    } 
+    
+
+    if (resRevenue.ok) {
+      const data = await resRevenue.json();
+      revenueDatas = data.results;
+    } 
+    else {
+      const err = await resRevenue.json();
+      console.error(err);
+    }
+
+    if (resTree.ok) {
+      const data = await resTree.json();
+      treeViews = data.results;
+    } 
+    else {
+      const err = await resTree.json();
+      console.error(err);
+    }
+		
+	if (res.ok) {
+		const data = await res.json();
+		
+		packageDatas = data.results.data;
+	} else {
+		const err = await res.json();
+		console.error(err);
+	}
+	return {
+		props: {
+			packageDatas,
+			treeViews,
+			revenueDatas,
+			resRevenuePersonalDatas
 		}
-		return {
-			props: {
-				packageDatas,
-				treeViews
-			}
-		};
 	};
+};
+
+	
 </script>
 
 <script lang="ts">
@@ -56,15 +81,17 @@ import { packagesAllStore } from '$lib/stores/package';
 	export let myAgent: Agent;
 	export let role: string;
 
+	export let revenueDatas: [];
+	export let resRevenuePersonalDatas:[];
 	export let treeViews: DataTableAgentList[] = [];
 	export let packageDatas: DataTableAgenctLevel[];
 
 	export let sumAgent = treeViews.length;
 
 	let sum = 0;
-	for (let i = 0; i < treeViews.length; i++) {
-		sum += treeViews[i].doanhso;
-	}
+    for (let i = 0; i < revenueDatas.length; i++) {
+      sum += revenueDatas[i].revenue;
+    }
 	let sumRevenueAgent = sum;
 
 	onMount(function () {});
@@ -269,7 +296,7 @@ import { packagesAllStore } from '$lib/stores/package';
 				<StatsCard
 					title="Doanh số cá nhân tháng"
 					type="gradient-info"
-					subTitle="160"
+					subTitle="{resRevenuePersonalDatas.revenue}"
 					icon="ni ni-chart-bar-32"
 					bodyClasses="bg-revenue"
 				>
